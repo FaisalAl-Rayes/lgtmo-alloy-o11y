@@ -1,0 +1,9 @@
+resources:
+  - ../../base/webapps
+
+namespace: argocd
+
+namePrefix: prod-
+
+patches:
+  - path: patches/prod-webapps-patch.yaml

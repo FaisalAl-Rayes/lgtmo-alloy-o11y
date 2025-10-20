@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-webapp-deployment
+  labels:
+    app: fastapi-webapp
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+        - name: fastapi-webapp-container
+          image: quay.io/falrayes/fastapi-argocd-workshop:prod-e7dc0879003909360426a64b73c8169a0d8d50a8

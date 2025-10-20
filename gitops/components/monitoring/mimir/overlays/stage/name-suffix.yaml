@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mimir
+  namespace: monitoring
+spec:
+  template:
+    metadata:
+      labels:
+        environment: stage
+

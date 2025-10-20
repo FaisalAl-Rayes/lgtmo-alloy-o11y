@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fastapi-webapp-ingress
+  labels:
+    app: fastapi-webapp
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+        - path: /fastapi
+          pathType: Prefix
+          backend:
+            service:
+              name: fastapi-webapp-service
+              port:
+                number: 8080

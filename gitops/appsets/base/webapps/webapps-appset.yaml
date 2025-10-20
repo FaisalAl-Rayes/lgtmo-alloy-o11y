@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: webapps-set
+  namespace: argocd
+spec:
+  generators:
+    - merge:
+        mergeKeys:
+          - nameNormalized
+        generators:
+          - list:
+              elements:
+                - name: dev-cluster
+                  nameNormalized: fastapi-app
+                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
+                  path: gitops/components/fastapi-webapp/overlays/dev
+                  namespace: dev-fastapi
+                  environment: dev
+                - name: dev-cluster
+                  nameNormalized: go-app
+                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
+                  path: gitops/components/go-webapp/overlays/dev
+                  namespace: dev-go
+                  environment: dev
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: dev
+  template:
+    metadata:
+      name: '{{environment}}-{{nameNormalized}}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{repoURL}}'
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        name: '{{name}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true

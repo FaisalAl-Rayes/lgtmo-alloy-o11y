@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: alloy-agent
+  namespace: alloy-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: alloy
+          env:
+            - name: MIMIR_ENDPOINT
+              value: "MONITORING_CLUSTER_IP:30090"
+            - name: LOKI_ENDPOINT
+              value: "MONITORING_CLUSTER_IP:30100"
+            - name: TEMPO_ENDPOINT
+              value: "MONITORING_CLUSTER_IP:30200"
+            - name: ENVIRONMENT
+              value: "stage"
+

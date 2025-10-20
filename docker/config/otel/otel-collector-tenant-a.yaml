@@ -1,0 +1,89 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1024
+  
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  
+  resource:
+    attributes:
+      - key: tenant.id
+        value: tenant-a
+        action: upsert
+      - key: tenant.name
+        value: "ACME Corporation"
+        action: upsert
+
+exporters:
+  # Export logs to Loki with tenant-a header
+  otlphttp/loki:
+    endpoint: http://loki:3100/otlp
+    headers:
+      X-Scope-OrgID: "tenant-a"
+    tls:
+      insecure: true
+  
+  # Export traces to Tempo with tenant-a header
+  otlp/tempo:
+    endpoint: tempo:4317
+    headers:
+      X-Scope-OrgID: "tenant-a"
+    tls:
+      insecure: true
+  
+  # Export metrics to Prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: otel
+    const_labels:
+      environment: docker
+      tenant: tenant-a
+  
+  # Export metrics to Mimir with tenant-a header
+  prometheusremotewrite:
+    endpoint: http://mimir:9009/api/v1/push
+    headers:
+      X-Scope-OrgID: "tenant-a"
+    tls:
+      insecure: true
+  
+  # Debug exporter for debugging
+  debug:
+    verbosity: normal
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/tempo]
+    
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [prometheus, prometheusremotewrite]
+    
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlphttp/loki]
+  
+  telemetry:
+    logs:
+      level: info
+

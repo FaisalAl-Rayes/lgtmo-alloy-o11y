@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          # Mimir instances
+          - name: mimir-stage
+            path: gitops/components/monitoring/mimir/overlays/stage
+            environment: stage
+          - name: mimir-prod
+            path: gitops/components/monitoring/mimir/overlays/prod
+            environment: prod
+          # Loki instances
+          - name: loki-stage
+            path: gitops/components/monitoring/loki/overlays/stage
+            environment: stage
+          - name: loki-prod
+            path: gitops/components/monitoring/loki/overlays/prod
+            environment: prod
+          # Tempo instances
+          - name: tempo-stage
+            path: gitops/components/monitoring/tempo/overlays/stage
+            environment: stage
+          - name: tempo-prod
+            path: gitops/components/monitoring/tempo/overlays/prod
+            environment: prod
+          # Grafana
+          - name: grafana
+            path: gitops/components/monitoring/grafana/overlays/monitoring
+            environment: monitoring
+  template:
+    metadata:
+      name: '{{name}}'
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        name: monitoring-cluster
+        namespace: monitoring
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-webapp-deployment
+  labels:
+    app: fastapi-webapp
+spec:
+  selector:
+    matchLabels:
+      app: fastapi-webapp
+  template:
+    metadata:
+      labels:
+        app: fastapi-webapp
+    spec:
+      containers:
+        - name: fastapi-webapp-container
+          image: username/fastapi-argocd-workshop:image-tag
+          envFrom:
+            - configMapRef:
+                name: app-envs
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 256Mi
+              cpu: "0.2"
+          livenessProbe:
+            httpGet:
+              path: /fastapi/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /fastapi/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: api-key
+              mountPath: /secrets
+          securityContext:
+            capabilities:
+              drop:
+                - NET_RAW
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsUser: 10001
+      volumes:
+        - name: api-key
+          secret:
+            secretName: app-secrets
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fastapi-webapp-service
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: fastapi-webapp

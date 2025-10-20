@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+namespace: argocd
+
+namePrefix: prod-
+
+patches:
+  - path: patches/prod-app-of-apps-patch.yaml

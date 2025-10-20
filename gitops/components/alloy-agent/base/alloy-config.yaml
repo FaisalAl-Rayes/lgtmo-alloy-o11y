@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  namespace: alloy-system
+data:
+  config.alloy: |
+    // OTLP Receiver - receives traces, metrics, and logs from applications
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      
+      output {
+        metrics = [otelcol.processor.batch.default.input]
+        logs    = [otelcol.processor.batch.default.input]
+        traces  = [otelcol.processor.batch.default.input]
+      }
+    }
+    
+    // Batch processor - batches telemetry data before export
+    otelcol.processor.batch "default" {
+      output {
+        metrics = [otelcol.exporter.otlp.metrics.input]
+        logs    = [otelcol.exporter.otlp.logs.input]
+        traces  = [otelcol.exporter.otlp.traces.input]
+      }
+    }
+    
+    // OTLP Exporter for Metrics (to Mimir via OTLP)
+    otelcol.exporter.otlp "metrics" {
+      client {
+        endpoint = env("MIMIR_ENDPOINT")
+        tls {
+          insecure = true
+        }
+      }
+    }
+    
+    // OTLP Exporter for Logs (to Loki via OTLP)
+    otelcol.exporter.otlp "logs" {
+      client {
+        endpoint = env("LOKI_ENDPOINT")
+        tls {
+          insecure = true
+        }
+      }
+    }
+    
+    // OTLP Exporter for Traces (to Tempo)
+    otelcol.exporter.otlp "traces" {
+      client {
+        endpoint = env("TEMPO_ENDPOINT")
+        tls {
+          insecure = true
+        }
+      }
+    }
+

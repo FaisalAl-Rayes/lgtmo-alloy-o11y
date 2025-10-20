@@ -1,0 +1,10 @@
+resources:
+  - ../../base/webapps
+
+namespace: argocd
+
+namePrefix: prod-
+
+patches:
+  - path: patches/prod-fastapi-app-patch.yaml
+  - path: patches/prod-go-app-patch.yaml

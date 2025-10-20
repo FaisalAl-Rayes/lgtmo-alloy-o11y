@@ -1,0 +1,12 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fastapi-app
+  namespace: argocd
+spec:
+  source:
+    path: gitops/components/fastapi-webapp/overlays/prod
+
+  destination:
+    name: prod-cluster
+    namespace: prod-fastapi

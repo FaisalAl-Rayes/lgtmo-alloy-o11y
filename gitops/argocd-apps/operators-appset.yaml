@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: operators
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          # Alloy Operator for stage cluster
+          - cluster: stage-cluster
+            name: alloy-operator-stage
+            path: gitops/operators/alloy-operator/overlays/stage
+            namespace: alloy-system
+          # Alloy Operator for prod cluster
+          - cluster: prod-cluster
+            name: alloy-operator-prod
+            path: gitops/operators/alloy-operator/overlays/prod
+            namespace: alloy-system
+          # Prometheus Operator for monitoring cluster
+          - cluster: monitoring-cluster
+            name: prometheus-operator
+            path: gitops/operators/prometheus-operator/overlays/monitoring
+            namespace: monitoring
+  template:
+    metadata:
+      name: '{{name}}'
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        name: '{{cluster}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
