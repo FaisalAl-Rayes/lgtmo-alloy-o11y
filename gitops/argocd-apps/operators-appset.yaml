@@ -29,7 +29,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/YOUR_USERNAME/YOUR_REPO.git
+        repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
         targetRevision: HEAD
         path: '{{path}}'
       destination:
