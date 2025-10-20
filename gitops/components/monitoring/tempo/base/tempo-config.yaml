@@ -39,7 +39,7 @@ data:
           source: tempo
       storage:
         path: /var/tempo/generator/wal
-      processors:
+      processor:
         span_metrics:
           dimensions:
             - service.name
