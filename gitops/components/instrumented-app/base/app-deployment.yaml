@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/grafana/instrumented-app:latest
+          image: ghcr.io/open-telemetry/demo:1.10.0-frontend
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -33,6 +33,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: FRONTEND_ADDR
+              value: ":8080"
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: "http://alloy.alloy-system.svc.cluster.local:4317"
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=instrumented-app,deployment.environment=$(ENVIRONMENT)"
           resources:
             requests:
               cpu: 100m
@@ -42,14 +48,14 @@ spec:
               memory: 512Mi
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 20
             periodSeconds: 5
 
