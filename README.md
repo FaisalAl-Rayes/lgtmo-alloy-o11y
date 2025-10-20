@@ -169,6 +169,22 @@ This will continuously send requests to both stage and prod applications, genera
 
 ## Accessing Services
 
+### Via Ingress (Recommended)
+
+First, set up the Ingress host entries:
+
+```bash
+./scripts/setup-ingress-hosts.sh
+```
+
+This script will add the necessary entries to your `/etc/hosts` file (requires sudo).
+
+Once configured, you can access services via friendly URLs:
+
+- **Grafana**: http://grafana.monitoring.local
+- **Stage App**: http://app.stage.local
+- **Prod App**: http://app.prod.local
+
 ### Via NodePort
 
 ```bash
@@ -430,6 +446,7 @@ This will delete all 4 minikube clusters and their data.
 │       └── alerting-rules-app.yaml
 └── scripts/                        # Helper scripts
     ├── get-cluster-info.sh         # Display cluster information
+    ├── setup-ingress-hosts.sh      # Setup /etc/hosts for Ingress access
     ├── port-forward-grafana.sh     # Port-forward Grafana
     ├── generate-traffic.sh         # Generate application traffic
     └── update-alloy-endpoints.sh   # Update Alloy configurations
