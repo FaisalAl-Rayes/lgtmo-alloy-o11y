@@ -39,10 +39,10 @@ data:
           source: tempo
       storage:
         path: /var/tempo/generator/wal
-      processor:
+      processors:
         span_metrics:
           dimensions:
-            - name: service.name
-            - name: http.method
-            - name: http.status_code
+            - service.name
+            - http.method
+            - http.status_code
 
