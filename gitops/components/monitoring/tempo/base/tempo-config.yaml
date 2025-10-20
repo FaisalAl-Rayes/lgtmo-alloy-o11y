@@ -42,7 +42,7 @@ data:
       processor:
         span_metrics:
           dimensions:
-            - name: service.name
-            - name: http.method
-            - name: http.status_code
+            - service.name
+            - http.method
+            - http.status_code
 

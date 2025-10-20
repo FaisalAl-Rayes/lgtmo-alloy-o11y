@@ -1,0 +1,104 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: log-alerts-prod
+  namespace: monitoring
+  labels:
+    tenant: prod
+    type: logs  # Log-based alerting rules
+    prometheus: monitoring
+spec:
+  groups:
+    - name: prod.log.alerts
+      interval: 1m
+      rules:
+        # High Error Log Rate (Stricter for prod)
+        - alert: HighErrorLogRate
+          expr: |
+            sum(rate({level="error"}[5m])) by (app) > 5
+          for: 3m
+          labels:
+            severity: critical
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: High error log rate in {{ $labels.app }}"
+            description: "Error log rate is {{ $value }} logs/s in production"
+            runbook_url: "https://wiki.example.com/runbooks/high-error-logs"
+        
+        # Critical Log Pattern Detection
+        - alert: CriticalLogPattern
+          expr: |
+            sum(rate({level="critical"}[1m])) by (app) > 0
+          for: 30s
+          labels:
+            severity: critical
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: Critical logs detected in {{ $labels.app }}"
+            description: "Critical log rate: {{ $value }} logs/s"
+            runbook_url: "https://wiki.example.com/runbooks/critical-logs"
+        
+        # Application Panic/Crash in Logs
+        - alert: ApplicationPanicInLogs
+          expr: |
+            sum(count_over_time({app=~".+"} |~ "(?i)(panic|fatal|crashed|segfault|oom)" [5m])) by (app) > 0
+          for: 30s
+          labels:
+            severity: critical
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: Application panic in {{ $labels.app }}"
+            description: "Found {{ $value }} panic/crash messages in production logs"
+            runbook_url: "https://wiki.example.com/runbooks/app-crash"
+        
+        # Database Error Spike
+        - alert: DatabaseErrorSpike
+          expr: |
+            sum(count_over_time({app=~".+"} |~ "(?i)(database error|connection refused|deadlock|timeout)" [5m])) by (app) > 10
+          for: 2m
+          labels:
+            severity: critical
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: Database error spike in {{ $labels.app }}"
+            description: "Found {{ $value }} database errors in production"
+            runbook_url: "https://wiki.example.com/runbooks/database-errors"
+        
+        # Authentication Failure Spike
+        - alert: AuthenticationFailureSpike
+          expr: |
+            sum(rate({app=~".+"} |~ "(?i)(authentication failed|login failed|unauthorized|forbidden)" [5m])) by (app) > 10
+          for: 5m
+          labels:
+            severity: warning
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: Authentication failure spike in {{ $labels.app }}"
+            description: "Authentication failures: {{ $value }} failures/s"
+            runbook_url: "https://wiki.example.com/runbooks/auth-failures"
+        
+        # No Logs Received (Application Down?)
+        - alert: NoLogsReceived
+          expr: |
+            absent_over_time({app=~".+"}[5m])
+          for: 5m
+          labels:
+            severity: critical
+            tenant: prod
+            component: logs
+            type: logs
+          annotations:
+            summary: "PRODUCTION: No logs received from applications"
+            description: "Critical: Applications may be down or logging is broken"
+            runbook_url: "https://wiki.example.com/runbooks/no-logs"
+

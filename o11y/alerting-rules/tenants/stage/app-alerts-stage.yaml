@@ -1,0 +1,72 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-alerts-stage
+  namespace: monitoring
+  labels:
+    tenant: stage  # This label is used by Alloy to sync to the stage tenant
+    type: metrics  # Distinguishes metrics-based rules from log-based rules
+    prometheus: monitoring
+spec:
+  groups:
+    - name: stage.app.alerts
+      interval: 30s
+      rules:
+        # High Error Rate Alert (Lenient threshold for stage)
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(app_errors_total[5m])) by (environment, type)
+              /
+              sum(rate(app_requests_total[5m])) by (environment)
+            ) > 0.05
+          for: 2m
+          labels:
+            severity: warning
+            tenant: stage
+            component: instrumented-app
+          annotations:
+            summary: "High error rate detected in stage environment"
+            description: "Error rate is {{ $value | humanizePercentage }} in stage"
+        
+        # High Latency Alert
+        - alert: HighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(app_request_duration_seconds_bucket[5m])) by (le, endpoint, environment)
+            ) > 1.0
+          for: 3m
+          labels:
+            severity: warning
+            tenant: stage
+            component: instrumented-app
+          annotations:
+            summary: "High latency on {{ $labels.endpoint }} in stage"
+            description: "95th percentile latency is {{ $value }}s"
+        
+        # Pod Restart Alert
+        - alert: PodRestartingFrequently
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace=~"apps-stage"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            tenant: stage
+            component: instrumented-app
+          annotations:
+            summary: "Pod {{ $labels.pod }} is restarting frequently in stage"
+            description: "Pod has restarted {{ $value }} times in the last 15 minutes"
+        
+        # Service Down Alert
+        - alert: ServiceDown
+          expr: |
+            up{job="instrumented-app", environment="stage"} == 0
+          for: 1m
+          labels:
+            severity: warning
+            tenant: stage
+            component: instrumented-app
+          annotations:
+            summary: "Service {{ $labels.instance }} is down in stage"
+            description: "The service has been down for more than 1 minute"
+

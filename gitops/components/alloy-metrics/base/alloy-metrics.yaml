@@ -1,0 +1,133 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-metrics
+  namespace: alloy-system
+  labels:
+    app: alloy-metrics
+spec:
+  controller:
+    type: statefulset
+    replicas: 1
+    enableStatefulSetAutoDeletePVC: true
+    volumeClaimTemplates:
+      - metadata:
+          name: alloy-wal
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: "standard"
+          resources:
+            requests:
+              storage: 256Mi
+
+  image:
+    repository: grafana/alloy
+    tag: v1.11.2
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  alloy:
+    clustering:
+      name: alloy-metrics
+      enabled: true
+    storagePath: /var/lib/alloy
+
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+    extraEnv:
+      - name: HOSTNAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: MIMIR_ENDPOINT
+        value: "PLACEHOLDER_MIMIR_ENDPOINT"
+      - name: ENVIRONMENT
+        value: "default"
+    mounts:
+      extra:
+        - name: alloy-wal
+          mountPath: /var/lib/alloy
+    configMap:
+      content: |
+        // OTLP Receiver - receives metrics from applications
+        otelcol.receiver.otlp "default" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+          
+          output {
+            metrics = [otelcol.processor.batch.default.input]
+          }
+        }
+        
+        // Batch processor - batches telemetry data before export
+        otelcol.processor.batch "default" {
+          output {
+            metrics = [otelcol.exporter.prometheus.metrics.input]
+          }
+        }
+        
+        // Prometheus Exporter for Metrics (converts OTLP to Prometheus format)
+        otelcol.exporter.prometheus "metrics" {
+          forward_to = [prometheus.relabel.add_cluster_labels.receiver]
+        }
+        
+        // ServiceMonitor scraper for Prometheus-native metrics
+        prometheus.operator.servicemonitors "application_metrics" {
+          forward_to = [prometheus.relabel.add_cluster_labels.receiver]
+        }
+
+        // Self-monitoring: Scrape Alloy's own metrics
+        prometheus.scrape "alloy_self" {
+          targets = [{
+            __address__ = "localhost:12345",
+          }]
+          
+          forward_to = [prometheus.relabel.add_cluster_labels.receiver]
+          
+          scrape_interval = "30s"
+        }
+        
+        // Common relabeling - adds source_cluster label to ALL metrics
+        prometheus.relabel "add_cluster_labels" {
+          rule {
+            target_label = "source_cluster"
+            replacement  = env("ENVIRONMENT")
+          }
+          
+          forward_to = [prometheus.remote_write.mimir.receiver]
+        }
+        
+        // Prometheus Remote Write to Mimir
+        prometheus.remote_write "mimir" {
+          endpoint {
+            url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+            
+            headers = {
+              "X-Scope-OrgID" = env("ENVIRONMENT"),
+            }
+          }
+
+          external_labels = {
+            cluster = env("ENVIRONMENT"),
+            job = "alloy-metrics",
+          }
+        }
+

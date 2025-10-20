@@ -1,0 +1,12 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-alerts
+spec:
+  alloy:
+    extraEnv:
+      - name: MIMIR_ENDPOINT
+        value: "mimir.monitoring.svc.cluster.local:9009"
+      - name: LOKI_ENDPOINT
+        value: "loki.monitoring.svc.cluster.local:3100"
+

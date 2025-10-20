@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: full-otel-instrumented-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: quay.io/falrayes/full-otel-instrumented-app-demo:stage-81759c40fb449658aa233edbdb7ab4bd6760f00b
+          env:
+            - name: ENVIRONMENT
+              value: "stage"
+            - name: OTEL_SERVICE_NAME
+              value: "full-otel-instrumented-app-stage"
+

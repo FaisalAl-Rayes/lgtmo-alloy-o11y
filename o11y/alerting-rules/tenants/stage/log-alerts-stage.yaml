@@ -1,0 +1,84 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: log-alerts-stage
+  namespace: monitoring
+  labels:
+    tenant: stage
+    type: logs  # Log-based alerting rules
+    prometheus: monitoring
+spec:
+  groups:
+    - name: stage.log.alerts
+      interval: 1m
+      rules:
+        # High Error Log Rate
+        - alert: HighErrorLogRate
+          expr: |
+            sum(rate({level="error"}[5m])) by (app) > 10
+          for: 5m
+          labels:
+            severity: warning
+            tenant: stage
+            component: logs
+            type: logs
+          annotations:
+            summary: "High error log rate in {{ $labels.app }} (stage)"
+            description: "Error log rate is {{ $value }} logs/s in stage environment"
+        
+        # Critical Log Pattern Detection
+        - alert: CriticalLogPattern
+          expr: |
+            sum(rate({level="critical"}[1m])) by (app) > 0
+          for: 1m
+          labels:
+            severity: critical
+            tenant: stage
+            component: logs
+            type: logs
+          annotations:
+            summary: "Critical logs detected in {{ $labels.app }} (stage)"
+            description: "Critical log rate: {{ $value }} logs/s"
+        
+        # Application Panic/Crash in Logs
+        - alert: ApplicationPanicInLogs
+          expr: |
+            sum(count_over_time({app=~".+"} |~ "(?i)(panic|fatal|crashed|segfault)" [5m])) by (app) > 0
+          for: 1m
+          labels:
+            severity: critical
+            tenant: stage
+            component: logs
+            type: logs
+          annotations:
+            summary: "Application panic detected in {{ $labels.app }} logs (stage)"
+            description: "Found {{ $value }} panic/crash messages in the last 5 minutes"
+        
+        # Database Error Spike
+        - alert: DatabaseErrorSpike
+          expr: |
+            sum(count_over_time({app=~".+"} |~ "(?i)(database error|connection refused|deadlock)" [5m])) by (app) > 20
+          for: 3m
+          labels:
+            severity: warning
+            tenant: stage
+            component: logs
+            type: logs
+          annotations:
+            summary: "Database error spike in {{ $labels.app }} (stage)"
+            description: "Found {{ $value }} database errors in the last 5 minutes"
+        
+        # No Logs Received (Application Down?)
+        - alert: NoLogsReceived
+          expr: |
+            absent_over_time({app=~".+"}[10m])
+          for: 10m
+          labels:
+            severity: warning
+            tenant: stage
+            component: logs
+            type: logs
+          annotations:
+            summary: "No logs received from applications in stage"
+            description: "Applications may be down or logging is broken"
+

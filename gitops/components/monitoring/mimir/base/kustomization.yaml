@@ -5,6 +5,7 @@ namespace: monitoring
 
 resources:
   - mimir-config.yaml
+  - alertmanager-fallback-config.yaml
   - mimir-statefulset.yaml
   - mimir-service.yaml
 

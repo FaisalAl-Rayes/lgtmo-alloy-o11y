@@ -6,7 +6,7 @@ metadata:
 data:
   mimir.yaml: |
     target: all
-    multitenancy_enabled: false
+    multitenancy_enabled: true
     
     server:
       http_listen_port: 9009
@@ -40,10 +40,27 @@ data:
           store: memberlist
         replication_factor: 1
     
+    ruler:
+      enable_api: true
+      alertmanager_url: http://localhost:9009/alertmanager
+      rule_path: /data/mimir/rules-data
+    
     ruler_storage:
       backend: filesystem
       filesystem:
         dir: /data/mimir/rules
+    
+    # Multi-tenant AlertManager configuration
+    alertmanager:
+      enable_api: true
+      data_dir: /data/mimir/alertmanager
+      external_url: http://mimir:9009/alertmanager
+      fallback_config_file: /etc/mimir-alertmanager/alertmanager-fallback.yaml
+    
+    alertmanager_storage:
+      backend: filesystem
+      filesystem:
+        dir: /data/mimir/alertmanager-configs
     
     memberlist:
       cluster_label: mimir-cluster

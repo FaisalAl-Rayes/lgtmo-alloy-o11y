@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e
 
+# Trap to cleanup port-forward on script exit/interrupt
+cleanup() {
+    echo -e "\n\nCleaning up..."
+    if [[ -n "${argo_port_forward_pid}" ]] && kill -0 "${argo_port_forward_pid}" 2>/dev/null; then
+        echo "Stopping port-forward (PID: ${argo_port_forward_pid})..."
+        kill "${argo_port_forward_pid}" 2>/dev/null || true
+    fi
+    echo "Done!"
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM EXIT
+
 
 # Linux amd64
 if [[ "$(uname)" == "Linux" ]] && [[ "$(arch)" == "x86_64" ]]; then
@@ -83,10 +96,27 @@ kubectl wait -n argocd --for=create secret/argocd-initial-admin-secret --timeout
 echo -e "\nWait for all the argocd pods to be ready...\n"
 kubectl wait -n argocd pod --all --for=condition=ready --timeout=300s --context control-cluster
 
+# Enable Helm support in Kustomize for ArgoCD
+echo -e "\nConfiguring ArgoCD to enable Helm in Kustomize...\n"
+kubectl patch configmap argocd-cm -n argocd --context control-cluster --type merge -p '{"data":{"kustomize.buildOptions":"--enable-helm"}}'
+
+# Restart all ArgoCD components to pick up the new config
+echo -e "Restarting all ArgoCD deployments and statefulsets...\n"
+kubectl rollout restart deployment -n argocd --context control-cluster
+kubectl rollout restart statefulset -n argocd --context control-cluster
+
+# Wait for all deployments to be ready
+echo -e "Waiting for ArgoCD deployments, and statefulsets pods to be ready...\n"
+kubectl rollout status deployment -n argocd --context control-cluster --timeout=300s
+kubectl rollout status statefulset -n argocd --context control-cluster --timeout=300s
+
 # Start kubectl port-forward in the background
 echo -e "port forwarding the argocd-server to 127.0.0.1:9797 in the background\n"
 kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-cluster &
 argo_port_forward_pid=$!
+
+echo -e "Waiting for 5 seconds to make sure the port forwarding is started\n"
+sleep 5
 
 # Store the argocd initial admin password
 argoURL="127.0.0.1:9797"
@@ -101,10 +131,22 @@ echo "Adding stage-cluster, prod-cluster, and monitoring-cluster to argocd"
 
 argocd cluster add --upsert stage-cluster --name stage-cluster --label environment=stage -y
 argocd cluster add --upsert prod-cluster --name prod-cluster --label environment=prod -y
-argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label type=monitoring -y
+argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label environment=monitoring -y
 
-# Press Enter to interrupt the port forwarding background process
-echo -e "\n\nPress Enter to stop port-forwarding..."
-read
+# Update the Alloy agent configurations with the actual monitoring cluster IP
+echo -e "Updating the Alloy agent configurations with the actual monitoring cluster IP...\n"
+./scripts/update-alloy-agents-endpoints.sh
 
-kill ${argo_port_forward_pid}
+# Keep the script running to maintain port-forward
+echo -e "\n\n================================"
+echo "✅ Setup Complete!"
+echo "================================"
+echo "ArgoCD UI: https://127.0.0.1:9797"
+echo "Username: admin"
+echo "Password: ${argoPassword}"
+echo ""
+echo "Press Ctrl+C to stop port-forwarding and exit..."
+echo "================================"
+
+# Wait indefinitely until interrupted
+wait ${argo_port_forward_pid}

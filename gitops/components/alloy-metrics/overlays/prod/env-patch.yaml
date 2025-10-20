@@ -1,0 +1,13 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-metrics
+  namespace: alloy-system
+spec:
+  alloy:
+    extraEnv:
+      - name: MIMIR_ENDPOINT
+        value: "192.168.49.2:30091"
+      - name: ENVIRONMENT
+        value: "prod"
+

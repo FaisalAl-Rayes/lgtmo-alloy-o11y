@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mimir-alertmanager-fallback
+  namespace: monitoring
+data:
+  alertmanager-fallback.yaml: |
+    global:
+      resolve_timeout: 5m
+    
+    route:
+      group_by: ['alertname', 'tenant', 'cluster']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      receiver: 'default-receiver'
+      
+      routes:
+        # Route critical alerts
+        - receiver: 'critical-receiver'
+          matchers:
+            - severity=~"critical"
+          continue: true
+        
+        # Route by tenant
+        - receiver: 'stage-receiver'
+          matchers:
+            - tenant="stage"
+        
+        - receiver: 'prod-receiver'
+          matchers:
+            - tenant="prod"
+    
+    receivers:
+      - name: 'default-receiver'
+        # Default receiver - can be configured with webhook, email, slack, etc.
+        # Example webhook:
+        # webhook_configs:
+        #   - url: 'http://example.com/webhook'
+      
+      - name: 'critical-receiver'
+        # Configure for critical alerts (PagerDuty, etc.)
+        # pagerduty_configs:
+        #   - service_key: 'YOUR_PAGERDUTY_KEY'
+      
+      - name: 'stage-receiver'
+        # Configure for stage environment
+        # slack_configs:
+        #   - api_url: 'https://hooks.slack.com/services/YOUR/STAGE/WEBHOOK'
+        #     channel: '#stage-alerts'
+      
+      - name: 'prod-receiver'
+        # Configure for production environment
+        # slack_configs:
+        #   - api_url: 'https://hooks.slack.com/services/YOUR/PROD/WEBHOOK'
+        #     channel: '#prod-alerts'
+        # pagerduty_configs:
+        #   - service_key: 'YOUR_PROD_PAGERDUTY_KEY'
+    
+    inhibit_rules:
+      # Suppress warning alerts when critical alerts are firing for the same issue
+      - source_matchers:
+          - severity="critical"
+        target_matchers:
+          - severity="warning"
+        equal: ['alertname', 'tenant', 'cluster']
+

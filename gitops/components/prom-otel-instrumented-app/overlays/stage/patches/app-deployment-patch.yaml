@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prom-otel-instrumented-app
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: quay.io/falrayes/prom-otel-instrumented-app-demo:stage-46d5b452bfaf711b4e3ba0445a9a1917b063adc9
+          env:
+            - name: ENVIRONMENT
+              value: "stage"
+            - name: OTEL_SERVICE_NAME
+              value: "prom-otel-instrumented-app-stage"
+

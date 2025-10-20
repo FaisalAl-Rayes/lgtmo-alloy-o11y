@@ -1,0 +1,89 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: app-alerts-prod
+  namespace: monitoring
+  labels:
+    tenant: prod  # This label is used by Alloy to sync to the prod tenant
+    type: metrics  # Distinguishes metrics-based rules from log-based rules
+    prometheus: monitoring
+spec:
+  groups:
+    - name: prod.app.alerts
+      interval: 30s
+      rules:
+        # High Error Rate Alert (Stricter threshold for production)
+        - alert: HighErrorRate
+          expr: |
+            (
+              sum(rate(app_errors_total[5m])) by (environment, type)
+              /
+              sum(rate(app_requests_total[5m])) by (environment)
+            ) > 0.02
+          for: 5m
+          labels:
+            severity: critical
+            tenant: prod
+            component: instrumented-app
+          annotations:
+            summary: "PRODUCTION: High error rate detected"
+            description: "Error rate is {{ $value | humanizePercentage }} in production"
+            runbook_url: "https://wiki.example.com/runbooks/high-error-rate"
+        
+        # High Latency Alert (Stricter threshold)
+        - alert: HighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(app_request_duration_seconds_bucket[5m])) by (le, endpoint, environment)
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            tenant: prod
+            component: instrumented-app
+          annotations:
+            summary: "PRODUCTION: High latency on {{ $labels.endpoint }}"
+            description: "95th percentile latency is {{ $value }}s in production"
+            runbook_url: "https://wiki.example.com/runbooks/high-latency"
+        
+        # Pod Restart Alert
+        - alert: PodRestartingFrequently
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace=~"apps-prod"}[15m]) > 0
+          for: 3m
+          labels:
+            severity: critical
+            tenant: prod
+            component: instrumented-app
+          annotations:
+            summary: "PRODUCTION: Pod {{ $labels.pod }} is restarting frequently"
+            description: "Pod has restarted {{ $value }} times in the last 15 minutes"
+            runbook_url: "https://wiki.example.com/runbooks/pod-restarts"
+        
+        # Service Down Alert
+        - alert: ServiceDown
+          expr: |
+            up{job="instrumented-app", environment="prod"} == 0
+          for: 30s
+          labels:
+            severity: critical
+            tenant: prod
+            component: instrumented-app
+          annotations:
+            summary: "PRODUCTION: Service {{ $labels.instance }} is down"
+            description: "The production service has been down for more than 30 seconds"
+            runbook_url: "https://wiki.example.com/runbooks/service-down"
+        
+        # Low Request Rate (potential issue in production)
+        - alert: LowRequestRate
+          expr: |
+            sum(rate(app_requests_total{environment="prod"}[5m])) by (environment) < 0.1
+          for: 10m
+          labels:
+            severity: warning
+            tenant: prod
+            component: instrumented-app
+          annotations:
+            summary: "PRODUCTION: Low request rate detected"
+            description: "Request rate is only {{ $value }} req/s in production"
+

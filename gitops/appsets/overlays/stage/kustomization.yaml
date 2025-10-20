@@ -1,0 +1,9 @@
+resources:
+  - ../../base/operators/prometheus-operator
+  - ../../base/operators/alloy-operator
+  - ../../base/alloy-agents
+  - ../../base/webapps
+
+namespace: argocd
+
+namePrefix: stage-

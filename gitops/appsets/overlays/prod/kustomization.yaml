@@ -1,4 +1,7 @@
 resources:
+  - ../../base/operators/prometheus-operator
+  - ../../base/operators/alloy-operator
+  - ../../base/alloy-agents
   - ../../base/webapps
 
 namespace: argocd
@@ -6,4 +9,7 @@ namespace: argocd
 namePrefix: prod-
 
 patches:
+  - path: patches/prod-alloy-agents-patch.yaml
+  - path: patches/prod-prometheus-operator-patch.yaml
+  - path: patches/prod-alloy-operator-patch.yaml
   - path: patches/prod-webapps-patch.yaml

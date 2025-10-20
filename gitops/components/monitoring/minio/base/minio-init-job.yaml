@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: minio-init-buckets
+  namespace: monitoring
+  labels:
+    app: minio-init
+spec:
+  template:
+    metadata:
+      labels:
+        app: minio-init
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-minio
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MinIO to be ready..."
+              until nc -z minio.monitoring.svc.cluster.local 9000; do
+                echo "MinIO not ready yet, waiting..."
+                sleep 5
+              done
+              echo "MinIO is ready!"
+              sleep 10
+      containers:
+        - name: mc
+          image: minio/mc:latest
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: access-key-id
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: secret-access-key
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Configuring MinIO client..."
+              mc alias set myminio http://minio.monitoring.svc.cluster.local:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY
+              
+              echo "Creating loki-ruler bucket..."
+              mc mb myminio/loki-ruler --ignore-existing
+              
+              echo "Setting bucket policy to public (for simplicity in POC)..."
+              mc anonymous set download myminio/loki-ruler
+              
+              echo "Buckets created successfully!"
+              mc ls myminio/
+

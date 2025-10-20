@@ -1,0 +1,76 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: monitoring-stack-set
+  namespace: argocd
+spec:
+  generators:
+    - merge:
+        mergeKeys:
+          - nameNormalized
+        generators:
+          - list:
+              elements:
+                # Alloy Alerts
+                - name: monitoring-cluster
+                  nameNormalized: alloy-alerts
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/alloy-alerts/overlays/monitoring
+                  namespace: alloy-system
+                  environment: monitoring
+                
+                # Minio for Loki Ruler (S3-compatible storage for Loki rules)
+                - name: monitoring-cluster
+                  nameNormalized: minio
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/minio/overlays/monitoring
+                  namespace: monitoring
+                  environment: monitoring
+
+                # LGTM O11Y Components
+                - name: monitoring-cluster
+                  nameNormalized: loki
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/loki/overlays/monitoring
+                  namespace: monitoring
+                  environment: monitoring
+                - name: monitoring-cluster
+                  nameNormalized: grafana
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/grafana/overlays/monitoring
+                  namespace: monitoring
+                  environment: monitoring
+                - name: monitoring-cluster
+                  nameNormalized: tempo
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/tempo/overlays/monitoring
+                  namespace: monitoring
+                  environment: monitoring
+                - name: monitoring-cluster
+                  nameNormalized: mimir
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/monitoring/mimir/overlays/monitoring
+                  namespace: monitoring
+                  environment: monitoring
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: monitoring
+  template:
+    metadata:
+      name: '{{nameNormalized}}-{{environment}}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{repoURL}}'
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        name: '{{name}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      syncOptions:
+        - CreateNamespace=true

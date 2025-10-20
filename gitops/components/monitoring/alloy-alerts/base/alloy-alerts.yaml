@@ -1,0 +1,149 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-alerts
+  namespace: alloy-system
+  labels:
+    app: alloy-alerts
+spec:
+  controller:
+    type: deployment
+    replicas: 1
+
+  image:
+    repository: grafana/alloy
+    tag: v1.11.2
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  alloy:
+    extraEnv:
+      - name: MIMIR_ENDPOINT
+        value: "PLACEHOLDER_MIMIR_ENDPOINT"
+      - name: LOKI_ENDPOINT
+        value: "PLACEHOLDER_LOKI_ENDPOINT"
+    
+    configMap:
+      content: |
+        // ========================================
+        // Multi-Tenant Alert Rules Syncing
+        // ========================================
+        
+        // Sync PrometheusRule CRDs to Mimir for Stage Tenant
+        mimir.rules.kubernetes "stage_rules" {
+          address   = "http://" + env("MIMIR_ENDPOINT")
+          tenant_id = "stage"
+          
+          rule_selector {
+            match_labels = {
+              tenant = "stage",
+              type = "metrics",
+            }
+          }
+          
+          rule_namespace_selector {
+            match_labels = {
+              "kubernetes.io/metadata.name" = "monitoring",
+            }
+          }
+        }
+        
+        // Sync PrometheusRule CRDs to Mimir for Prod Tenant
+        mimir.rules.kubernetes "prod_rules" {
+          address   = "http://" + env("MIMIR_ENDPOINT")
+          tenant_id = "prod"
+          
+          rule_selector {
+            match_labels = {
+              tenant = "prod",
+              type = "metrics",
+            }
+          }
+          
+          rule_namespace_selector {
+            match_labels = {
+              "kubernetes.io/metadata.name" = "monitoring",
+            }
+          }
+        }
+        
+        // ========================================
+        // Loki Rules Syncing
+        // ========================================
+        
+        // Sync PrometheusRule CRDs with log queries to Loki for Stage Tenant
+        loki.rules.kubernetes "stage_log_rules" {
+          address   = "http://" + env("LOKI_ENDPOINT")
+          tenant_id = "stage"
+          
+          rule_selector {
+            match_labels = {
+              tenant = "stage",
+              type   = "logs",
+            }
+          }
+          
+          rule_namespace_selector {
+            match_labels = {
+              "kubernetes.io/metadata.name" = "monitoring",
+            }
+          }
+        }
+        
+        // Sync PrometheusRule CRDs with log queries to Loki for Prod Tenant
+        loki.rules.kubernetes "prod_log_rules" {
+          address   = "http://" + env("LOKI_ENDPOINT")
+          tenant_id = "prod"
+          
+          rule_selector {
+            match_labels = {
+              tenant = "prod",
+              type   = "logs",
+            }
+          }
+          
+          rule_namespace_selector {
+            match_labels = {
+              "kubernetes.io/metadata.name" = "monitoring",
+            }
+          }
+        }
+        
+        // ========================================
+        // Self-Monitoring
+        // ========================================
+        // Monitor Alloy-Alerts health metrics
+        prometheus.exporter.self "alloy_alerts" { }
+        
+        prometheus.scrape "alloy_alerts_self" {
+          targets = prometheus.exporter.self.alloy_alerts.targets
+          
+          forward_to = [prometheus.remote_write.mimir.receiver]
+          
+          scrape_interval = "30s"
+          
+          job_name = "alloy-alerts"
+        }
+        
+        // Remote write self-monitoring metrics to Mimir
+        prometheus.remote_write "mimir" {
+          endpoint {
+            url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+            
+            headers = {
+              "X-Scope-OrgID" = "monitoring",
+            }
+          }
+
+          external_labels = {
+            component = "alloy-alerts",
+            job = "alloy-alerts",
+          }
+        }
+

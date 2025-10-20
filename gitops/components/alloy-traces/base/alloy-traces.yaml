@@ -1,0 +1,89 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-traces
+  namespace: alloy-system
+  labels:
+    app: alloy-traces
+spec:
+  controller:
+    type: deployment
+    replicas: 1
+
+  image:
+    repository: grafana/alloy
+    tag: v1.11.2
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+    extraEnv:
+      - name: HOSTNAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: TEMPO_ENDPOINT
+        value: "PLACEHOLDER_TEMPO_ENDPOINT"
+      - name: ENVIRONMENT
+        value: "default"
+    configMap:
+      content: |
+        // OTLP Receiver - receives traces from applications
+        otelcol.receiver.otlp "default" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+          
+          output {
+            traces = [otelcol.processor.attributes.add_cluster_labels.input]
+          }
+        }
+        
+        // Attributes processor - adds source cluster labels to all telemetry
+        otelcol.processor.attributes "add_cluster_labels" {
+          action {
+            key = "source_cluster"
+            action = "insert"
+            value = env("ENVIRONMENT")
+          }
+          
+          output {
+            traces = [otelcol.processor.batch.default.input]
+          }
+        }
+        
+        // Batch processor - batches telemetry data before export
+        otelcol.processor.batch "default" {
+          output {
+            traces = [otelcol.exporter.otlp.traces.input]
+          }
+        }
+        
+        // OTLP Exporter for Traces (to Tempo)
+        otelcol.exporter.otlp "traces" {
+          client {
+            endpoint = env("TEMPO_ENDPOINT")
+            tls {
+              insecure = true
+            }
+          }
+        }

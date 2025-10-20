@@ -1,0 +1,12 @@
+resources:
+  - ../../base/operators/prometheus-operator
+  - ../../base/operators/alloy-operator
+  - ../../base/monitoring-stack
+
+namespace: argocd
+
+namePrefix: monitoring-
+
+patches:
+  - path: patches/monitoring-prometheus-operator-patch.yaml
+  - path: patches/monitoring-alloy-operator-patch.yaml

@@ -7,4 +7,5 @@ resources:
   - grafana-datasources.yaml
   - grafana-deployment.yaml
   - grafana-service.yaml
+  - grafana-ingress.yaml
 

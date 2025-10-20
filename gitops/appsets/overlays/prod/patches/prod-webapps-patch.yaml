@@ -12,16 +12,16 @@ spec:
           - list:
               elements:
                 - name: prod-cluster
-                  nameNormalized: fastapi-app
-                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
-                  path: gitops/components/fastapi-webapp/overlays/prod
-                  namespace: prod-fastapi
+                  nameNormalized: full-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/full-otel-instrumented-app/overlays/prod
+                  namespace: full-otel-instrumented-app-ns
                   environment: prod
                 - name: prod-cluster
-                  nameNormalized: go-app
-                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
-                  path: gitops/components/go-webapp/overlays/prod
-                  namespace: prod-go
+                  nameNormalized: prom-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/prom-otel-instrumented-app/overlays/prod
+                  namespace: prom-otel-instrumented-app-ns
                   environment: prod
           - clusters:
               selector:

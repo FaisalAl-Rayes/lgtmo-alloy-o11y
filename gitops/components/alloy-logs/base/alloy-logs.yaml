@@ -1,0 +1,105 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-logs
+  namespace: alloy-system
+  labels:
+    app: alloy-logs
+spec:
+  controller:
+    type: daemonset
+    replicas: 1
+
+  image:
+    repository: grafana/alloy
+    tag: v1.11.2
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+    extraEnv:
+      - name: HOSTNAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: LOKI_ENDPOINT
+        value: "PLACEHOLDER_LOKI_ENDPOINT"
+      - name: ENVIRONMENT
+        value: "default"
+    configMap:
+      content: |
+        // OTLP Receiver - receives logs from applications
+        otelcol.receiver.otlp "default" {
+          grpc {
+            endpoint = "0.0.0.0:4317"
+          }
+          
+          http {
+            endpoint = "0.0.0.0:4318"
+          }
+          
+          output {
+            logs = [otelcol.processor.batch.default.input]
+          }
+        }
+        
+        // Batch processor - batches telemetry data before export
+        otelcol.processor.batch "default" {
+          output {
+            logs = [otelcol.exporter.loki.logs.input]
+          }
+        }
+        
+        // Loki Exporter for Logs (converts OTLP to Loki format)
+        otelcol.exporter.loki "logs" {
+          forward_to = [loki.relabel.add_cluster_labels.receiver]
+        }
+        
+        // PodLogs scraper for collecting stdout/stderr from pods
+        loki.source.podlogs "podlogs_scraper" {
+          forward_to = [loki.relabel.add_cluster_labels.receiver]
+          
+          selector {
+            match_expression {
+              key      = "app"
+              operator = "In"
+              values   = ["prom-otel-instrumented-app", "full-otel-instrumented-app"]
+            }
+          }
+        }
+        
+        // Common relabeling - adds source_cluster label to ALL logs
+        loki.relabel "add_cluster_labels" {
+          rule {
+            target_label = "source_cluster"
+            replacement  = env("ENVIRONMENT")
+          }
+          
+          forward_to = [loki.write.logs.receiver]
+        }
+        
+        // Loki Write endpoint
+        loki.write "logs" {
+          endpoint {
+            url = "http://" + env("LOKI_ENDPOINT") + "/loki/api/v1/push"
+            
+            headers = {
+              "X-Scope-OrgID" = env("ENVIRONMENT"),
+            }
+          }
+        }

@@ -7,9 +7,9 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
+    repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
     targetRevision: HEAD
-    path: gitops/appsets/overlays/dev
+    path: gitops/appsets/overlays/stage
 
   destination:
     server: https://kubernetes.default.svc

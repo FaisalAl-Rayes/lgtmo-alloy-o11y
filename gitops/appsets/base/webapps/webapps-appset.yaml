@@ -11,25 +11,27 @@ spec:
         generators:
           - list:
               elements:
-                - name: dev-cluster
-                  nameNormalized: fastapi-app
-                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
-                  path: gitops/components/fastapi-webapp/overlays/dev
-                  namespace: dev-fastapi
-                  environment: dev
-                - name: dev-cluster
-                  nameNormalized: go-app
-                  repoURL: https://github.com/FaisalAl-Rayes/argocd-workshop.git
-                  path: gitops/components/go-webapp/overlays/dev
-                  namespace: dev-go
-                  environment: dev
+                - name: stage-cluster
+                  nameNormalized: full-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/full-otel-instrumented-app/overlays/stage
+                  namespace: full-otel-instrumented-app-ns
+                  environment: stage
+                - name: stage-cluster
+                  nameNormalized: prom-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/prom-otel-instrumented-app/overlays/stage
+                  namespace: prom-otel-instrumented-app-ns
+                  environment: stage
           - clusters:
               selector:
                 matchLabels:
-                  environment: dev
+                  environment: stage
   template:
     metadata:
-      name: '{{environment}}-{{nameNormalized}}'
+      name: '{{nameNormalized}}-{{environment}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
     spec:
       project: default
       source:

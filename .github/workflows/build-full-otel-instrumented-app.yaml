@@ -1,0 +1,101 @@
+name: Build Full Otel Instrumented App
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - "apps/full-otel-instrumented-app/src/**"
+
+env:
+  GIT_EMAIL: github-actions@github.com
+  REGISTRY_URL: quay.io
+  REGISTRY_USERNAME: falrayes
+  REGISTRY_ACCESS_USER: falrayes+lgtmo_stack_demo
+  FULL_OTEL_INSTRUMENTED_APP_IMAGE_REPO: full-otel-instrumented-app-demo
+  CI_COMMIT_MESSAGE: "[build-full-otel-instrumented-app-auto-commit] Built the full otel instrumented app container image"
+  CI_COMMIT_AUTHOR: GitHub Workflows
+
+jobs:
+  build-full-otel-instrumented-app:
+    name: Build the full otel instrumented app container image
+    runs-on: ubuntu-latest
+    outputs:
+      stage-image: ${{ steps.save-full-otel-instrumented-app-image-urls.outputs.stage-image }}
+      prod-image: ${{ steps.save-full-otel-instrumented-app-image-urls.outputs.prod-image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Build Full Otel Instrumented App Image
+        id: build-full-otel-instrumented-app-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.FULL_OTEL_INSTRUMENTED_APP_IMAGE_REPO }}
+          layers: true
+          tags: latest stage-${{ github.sha }} prod-${{ github.sha }}
+          platforms: linux/amd64, linux/arm64, linux/arm64/v8
+          context: ./apps/full-otel-instrumented-app/src/
+          containerfiles: |
+            ./apps/full-otel-instrumented-app/src/Containerfile
+
+      - name: Push To Registry
+        id: push-full-otel-instrumented-app-to-registry
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-full-otel-instrumented-app-image.outputs.image }}
+          tags: ${{ steps.build-full-otel-instrumented-app-image.outputs.tags }}
+          registry: ${{ env.REGISTRY_URL }}/${{ env.REGISTRY_USERNAME }}
+          username: ${{ env.REGISTRY_ACCESS_USER }}
+          password: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
+
+      - name: Save the Full Otel Instrumented App image urls
+        id: save-full-otel-instrumented-app-image-urls
+        run: |
+          echo "stage-image=$(echo '${{ steps.push-full-otel-instrumented-app-to-registry.outputs.registry-paths }}' | jq -r '.[1]')" >> "$GITHUB_OUTPUT"
+          echo "prod-image=$(echo '${{ steps.push-full-otel-instrumented-app-to-registry.outputs.registry-paths }}' | jq -r '.[2]')" >> "$GITHUB_OUTPUT"
+
+  update-manifests:
+    name: Update the kubernetes manifests
+    runs-on: ubuntu-latest
+    needs:
+      - build-full-otel-instrumented-app
+    continue-on-error: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin
+
+      # This step is very important for the CD part of the pipeline.
+      # The generated manifests in the step(Generate and update manifests) are for any user to take a quick look on the manifests built by Kustomize and are being applied.
+      # However ArgoCD is pointing towards the particular overlay with a kustomize.yaml file to generate and apply the manifests immediately.
+      # Put simply it is the overlay that will be the source of the apply (kubectl apply -k overlay/stage) NOT (kubectl apply -f gitops/kustomized-output/manifests.yaml)
+      - name: Update the patch with the approperiate tag name for ArgoCD
+        run: |
+          sed -i 's|image:.*:.*|image: ${{ needs.build-full-otel-instrumented-app.outputs.stage-image }}|' gitops/components/full-otel-instrumented-app/overlays/stage/patches/app-deployment-patch.yaml
+          sed -i 's|image:.*:.*|image: ${{ needs.build-full-otel-instrumented-app.outputs.prod-image }}|' gitops/components/full-otel-instrumented-app/overlays/prod/patches/app-deployment-patch.yaml
+
+      - name: Git setup, add, commit, and push
+        run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "${{ env.GIT_EMAIL }}"
+          git add gitops/components/full-otel-instrumented-app/overlays/stage/patches/app-deployment-patch.yaml
+          git add gitops/components/full-otel-instrumented-app/overlays/prod/patches/app-deployment-patch.yaml
+
+          # Check if there are changes to commit
+          if ! git diff --cached --quiet; then
+            git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+            git pull --rebase origin master 
+            git push origin master
+          else
+            echo "No changes to commit."
+          fi

@@ -1,0 +1,12 @@
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-logs
+  namespace: alloy-system
+spec:
+  alloy:
+    extraEnv:
+      - name: LOKI_ENDPOINT
+        value: "LOKI_ENDPOINT_PLACEHOLDER"
+      - name: ENVIRONMENT
+        value: "prod"
