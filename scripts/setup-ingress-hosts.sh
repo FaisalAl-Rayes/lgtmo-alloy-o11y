@@ -1,73 +1,93 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 set -e
 
 echo "=========================================="
 echo "Setting up /etc/hosts for Ingress Access"
 echo "=========================================="
-echo ""
 
-# Get cluster IPs
-monitoring_ip=$(minikube ip -p monitoring-cluster 2>/dev/null)
-stage_ip=$(minikube ip -p stage-cluster 2>/dev/null)
-prod_ip=$(minikube ip -p prod-cluster 2>/dev/null)
+# Get minikube IPs
+MONITORING_IP=$(minikube ip -p monitoring-cluster 2>/dev/null || echo "")
+STAGE_IP=$(minikube ip -p stage-cluster 2>/dev/null || echo "")
+PROD_IP=$(minikube ip -p prod-cluster 2>/dev/null || echo "")
 
-if [[ -z "$monitoring_ip" ]] || [[ -z "$stage_ip" ]] || [[ -z "$prod_ip" ]]; then
-    echo "Error: One or more clusters are not running"
-    echo "Run './.hack/clusters-up.sh' first"
+# Check if clusters are running
+if [[ -z "$MONITORING_IP" ]] || [[ -z "$STAGE_IP" ]] || [[ -z "$PROD_IP" ]]; then
+    echo "❌ Error: One or more clusters are not running."
+    echo "Please start the clusters first with: ./.hack/clusters-up.sh"
     exit 1
 fi
 
-echo "Cluster IPs:"
-echo "  Monitoring: $monitoring_ip"
-echo "  Stage:      $stage_ip"
-echo "  Prod:       $prod_ip"
-echo ""
+# Detect OS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Detected macOS - using minikube IPs with NodePorts"
+    MONITORING_HOST="${MONITORING_IP}"
+    STAGE_HOST="${STAGE_IP}"
+    PROD_HOST="${PROD_IP}"
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Detected Linux - using minikube IPs directly"
+    MONITORING_HOST="${MONITORING_IP}"
+    STAGE_HOST="${STAGE_IP}"
+    PROD_HOST="${PROD_IP}"
+else
+    echo "❌ Unsupported OS: $OSTYPE"
+    exit 1
+fi
 
-# Create temporary hosts entries
-HOSTS_ENTRIES="
-# Multi-cluster Observability - Ingress Hosts
-$monitoring_ip grafana.monitoring.local
-$stage_ip app.stage.local
-$prod_ip app.prod.local
+# Check if entries already exist
+HOSTS_FILE="/etc/hosts"
+MARKER="# Multi-cluster Observability - Ingress Hosts"
+
+if grep -q "$MARKER" "$HOSTS_FILE" 2>/dev/null; then
+    echo "⚠️  Entries already exist in /etc/hosts"
+    echo "Removing old entries..."
+    
+    # Remove old entries (requires sudo)
+    sudo sed -i.bak "/$MARKER/,/^$/d" "$HOSTS_FILE" 2>/dev/null || \
+    sudo sed -i '' "/$MARKER/,/^$/d" "$HOSTS_FILE" 2>/dev/null
+fi
+
+# Prepare new entries
+NEW_ENTRIES="$MARKER
+$MONITORING_HOST grafana.monitoring.local
+$STAGE_HOST app.stage.local
+$PROD_HOST app.prod.local
 "
 
-echo "The following entries need to be added to /etc/hosts:"
-echo "$HOSTS_ENTRIES"
 echo ""
+echo "The following entries need to be added to /etc/hosts:"
+echo "$NEW_ENTRIES"
 
-# Check if running on macOS or Linux
-if [[ "$(uname)" == "Darwin" ]] || [[ "$(uname)" == "Linux" ]]; then
-    echo "Would you like to add these entries to /etc/hosts? (requires sudo)"
-    echo "Type 'yes' to continue, or 'no' to see manual instructions:"
-    read -r response
-    
-    if [[ "$response" == "yes" ]]; then
-        # Remove old entries if they exist
-        sudo sed -i.bak '/# Multi-cluster Observability - Ingress Hosts/,/app.prod.local/d' /etc/hosts
-        
-        # Add new entries
-        echo "$HOSTS_ENTRIES" | sudo tee -a /etc/hosts > /dev/null
-        
-        echo ""
-        echo "✅ Successfully added entries to /etc/hosts"
-        echo ""
-        echo "You can now access:"
-        echo "  Grafana:    http://grafana.monitoring.local"
-        echo "  Stage App:  http://app.stage.local"
-        echo "  Prod App:   http://app.prod.local"
-        echo ""
-    else
-        echo ""
-        echo "To add these entries manually, run:"
-        echo "  sudo nano /etc/hosts"
-        echo ""
-        echo "Then add these lines at the end:"
-        echo "$HOSTS_ENTRIES"
-        echo ""
-    fi
+# Add entries
+echo ""
+echo "Would you like to add these entries to /etc/hosts? (requires sudo)"
+echo "Type 'yes' to continue, or 'no' to see manual instructions:"
+read -r response
+
+if [[ "$response" == "yes" ]]; then
+    echo "$NEW_ENTRIES" | sudo tee -a "$HOSTS_FILE" > /dev/null
+    echo ""
+    echo "✅ Successfully added entries to /etc/hosts"
+    echo ""
+    echo "You can now access:"
+    echo "  Grafana:    http://grafana.monitoring.local:30079"
+    echo "  Stage App:  http://app.stage.local:30080"
+    echo "  Prod App:   http://app.prod.local:30081"
 else
-    echo "Unsupported OS. Please manually add the entries above to your hosts file."
+    echo ""
+    echo "Manual instructions:"
+    echo "1. Open /etc/hosts with your editor:"
+    echo "   sudo nano /etc/hosts"
+    echo ""
+    echo "2. Add these lines at the end:"
+    echo "$NEW_ENTRIES"
+    echo ""
+    echo "3. Save and exit"
+    echo ""
+    echo "4. Access services at:"
+    echo "   Grafana:    http://grafana.monitoring.local:30079"
+    echo "   Stage App:  http://app.stage.local:30080"
+    echo "   Prod App:   http://app.prod.local:30081"
 fi
 
 echo "=========================================="
-

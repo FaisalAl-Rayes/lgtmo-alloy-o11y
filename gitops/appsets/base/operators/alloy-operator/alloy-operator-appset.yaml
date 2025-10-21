@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: webapps-set
+  name: alloy-operator-set
   namespace: argocd
 spec:
   generators:
@@ -12,18 +12,20 @@ spec:
           - list:
               elements:
                 - name: stage-cluster
-                  nameNormalized: instrumented-app
+                  nameNormalized: alloy-operator
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
-                  path: gitops/components/instrumented-app/overlays/stage
-                  namespace: instrumented-app-ns
-                  environment: stage
+                  path: gitops/components/operators/alloy-operator
+                  namespace: alloy-system
+                  environment: monitoring
           - clusters:
               selector:
                 matchLabels:
-                  environment: stage
+                  environment: monitoring
   template:
     metadata:
-      name: '{{nameNormalized}}-{{environment}}'
+      name: '{{nameNormalized}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
     spec:
       project: default
       source:
@@ -37,3 +39,6 @@ spec:
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+

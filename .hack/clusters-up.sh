@@ -101,7 +101,7 @@ echo "Adding stage-cluster, prod-cluster, and monitoring-cluster to argocd"
 
 argocd cluster add --upsert stage-cluster --name stage-cluster --label environment=stage -y
 argocd cluster add --upsert prod-cluster --name prod-cluster --label environment=prod -y
-argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label type=monitoring -y
+argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label environment=monitoring -y
 
 # Press Enter to interrupt the port forwarding background process
 echo -e "\n\nPress Enter to stop port-forwarding..."

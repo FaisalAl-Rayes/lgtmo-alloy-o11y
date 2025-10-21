@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: webapps-set
+  name: alloy-agent-set
   namespace: argocd
 spec:
   generators:
@@ -12,10 +12,10 @@ spec:
           - list:
               elements:
                 - name: stage-cluster
-                  nameNormalized: instrumented-app
+                  nameNormalized: alloy-agent
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
-                  path: gitops/components/instrumented-app/overlays/stage
-                  namespace: instrumented-app-ns
+                  path: gitops/components/alloy-agent/overlays/stage
+                  namespace: alloy-system
                   environment: stage
           - clusters:
               selector:
@@ -37,3 +37,6 @@ spec:
         automated:
           prune: true
           selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+

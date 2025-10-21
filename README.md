@@ -114,12 +114,14 @@ Deploy in the following order:
 # Switch to control cluster
 kubectl config use-context control-cluster
 
-# Deploy operators
-kubectl apply -f gitops/argocd-apps/operators-appset.yaml
+# Deploy operators (using Helm charts via ArgoCD)
+kubectl apply -f gitops/argocd-apps/alloy-operator-appset.yaml
+kubectl apply -f gitops/argocd-apps/prometheus-operator-app.yaml
 
 # Wait for operators to be ready (2-3 minutes)
-kubectl wait --for=condition=available --timeout=300s deployment -l app.kubernetes.io/name=alloy-operator -n alloy-system --context stage-cluster
-kubectl wait --for=condition=available --timeout=300s deployment -l app.kubernetes.io/name=alloy-operator -n alloy-system --context prod-cluster
+kubectl wait --for=condition=available --timeout=300s deployment -l app.kubernetes.io/name=alloy -n alloy-system --context stage-cluster
+kubectl wait --for=condition=available --timeout=300s deployment -l app.kubernetes.io/name=alloy -n alloy-system --context prod-cluster
+kubectl wait --for=condition=available --timeout=300s deployment -l app.kubernetes.io/name=prometheus-operator -n monitoring --context monitoring-cluster
 
 # Deploy monitoring stack
 kubectl apply -f gitops/argocd-apps/monitoring-stack-appset.yaml
@@ -140,21 +142,26 @@ kubectl apply -f gitops/argocd-apps/instrumented-apps-appset.yaml
 kubectl apply -f gitops/argocd-apps/alerting-rules-app.yaml
 ```
 
-### 6. Access Grafana
+### 6. Access Services
 
-Using NodePort:
+Setup Ingress access:
 
 ```bash
-# Get monitoring cluster IP
-MONITORING_IP=$(minikube ip -p monitoring-cluster)
-echo "Grafana: http://$MONITORING_IP:30300"
+./scripts/setup-ingress-hosts.sh
 ```
 
-Or use port-forwarding:
+Then access:
+
+- **Grafana**: http://grafana.monitoring.local:30079 (admin/admin)
+- **Stage App**: http://app.stage.local:30080
+- **Prod App**: http://app.prod.local:30081
+
+Or use direct IPs:
 
 ```bash
-./scripts/port-forward-grafana.sh
-# Access at http://localhost:3000
+MONITORING_IP=$(minikube ip -p monitoring-cluster)
+echo "Grafana: http://$MONITORING_IP:30079"
+# Default credentials: admin/admin
 ```
 
 ### 7. Generate Traffic
@@ -169,23 +176,41 @@ This will continuously send requests to both stage and prod applications, genera
 
 ## Accessing Services
 
-### Via Ingress (Recommended)
+### Via Ingress with NodePort (Recommended)
 
-First, set up the Ingress host entries:
+The Ingress controllers in each cluster are configured to use non-privileged NodePorts to avoid port conflicts:
+
+- **Monitoring cluster**: Port 30079
+- **Stage cluster**: Port 30080
+- **Prod cluster**: Port 30081
+
+Setup the `/etc/hosts` entries:
 
 ```bash
 ./scripts/setup-ingress-hosts.sh
 ```
 
-This script will add the necessary entries to your `/etc/hosts` file (requires sudo).
+This script will:
 
-Once configured, you can access services via friendly URLs:
+1. Detect your minikube cluster IPs
+2. Add entries to `/etc/hosts` (requires sudo)
+3. Display the access URLs
 
-- **Grafana**: http://grafana.monitoring.local
-- **Stage App**: http://app.stage.local
-- **Prod App**: http://app.prod.local
+#### Access Services
 
-### Via NodePort
+Once configured, you can access services via friendly URLs with specific ports:
+
+- **Grafana**: http://grafana.monitoring.local:30079
+- **Stage App**: http://app.stage.local:30080
+- **Prod App**: http://app.prod.local:30081
+
+**Default Credentials**:
+
+- Grafana: admin / admin
+
+### Via Direct NodePort
+
+If you prefer not to modify `/etc/hosts`, you can access services directly via minikube IPs
 
 ```bash
 # Get cluster IPs
@@ -194,9 +219,9 @@ PROD_IP=$(minikube ip -p prod-cluster)
 MONITORING_IP=$(minikube ip -p monitoring-cluster)
 
 # Access services
-echo "Grafana:     http://$MONITORING_IP:30300"
-echo "Stage App:   http://$STAGE_IP:30800"
-echo "Prod App:    http://$PROD_IP:30800"
+echo "Grafana:     http://$MONITORING_IP:30079"
+echo "Stage App:   http://$STAGE_IP:30080"
+echo "Prod App:    http://$PROD_IP:30081"
 ```
 
 ### Via Port-Forwarding
@@ -447,6 +472,7 @@ This will delete all 4 minikube clusters and their data.
 └── scripts/                        # Helper scripts
     ├── get-cluster-info.sh         # Display cluster information
     ├── setup-ingress-hosts.sh      # Setup /etc/hosts for Ingress access
+    ├── start-minikube-tunnels.sh   # Start minikube tunnels (macOS)
     ├── port-forward-grafana.sh     # Port-forward Grafana
     ├── generate-traffic.sh         # Generate application traffic
     └── update-alloy-endpoints.sh   # Update Alloy configurations

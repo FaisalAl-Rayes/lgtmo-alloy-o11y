@@ -1,0 +1,5 @@
+resources:
+  - ../../base/operators/prometheus-operator
+  - ../../base/monitoring-stack
+
+namespace: argocd
