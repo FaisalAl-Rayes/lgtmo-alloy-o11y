@@ -44,4 +44,5 @@ data:
       max_streams_per_user: 0
       max_global_streams_per_user: 0
       allow_structured_metadata: false
+      volume_enabled: true
 
