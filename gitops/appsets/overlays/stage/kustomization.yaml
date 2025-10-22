@@ -4,3 +4,5 @@ resources:
   - ../../base/webapps
 
 namespace: argocd
+
+namePrefix: stage-
