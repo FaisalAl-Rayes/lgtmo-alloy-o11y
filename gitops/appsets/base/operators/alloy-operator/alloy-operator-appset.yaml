@@ -16,14 +16,14 @@ spec:
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
                   path: gitops/components/operators/alloy-operator
                   namespace: alloy-system
-                  environment: monitoring
+                  environment: stage
           - clusters:
               selector:
                 matchLabels:
-                  environment: monitoring
+                  environment: stage
   template:
     metadata:
-      name: '{{nameNormalized}}'
+      name: '{{nameNormalized}}-{{environment}}'
       annotations:
         argocd.argoproj.io/sync-wave: "-1"
     spec:
