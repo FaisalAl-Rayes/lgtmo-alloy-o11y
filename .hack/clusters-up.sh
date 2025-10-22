@@ -83,6 +83,20 @@ kubectl wait -n argocd --for=create secret/argocd-initial-admin-secret --timeout
 echo -e "\nWait for all the argocd pods to be ready...\n"
 kubectl wait -n argocd pod --all --for=condition=ready --timeout=300s --context control-cluster
 
+# Enable Helm support in Kustomize for ArgoCD
+echo -e "\nConfiguring ArgoCD to enable Helm in Kustomize...\n"
+kubectl patch configmap argocd-cm -n argocd --context control-cluster --type merge -p '{"data":{"kustomize.buildOptions":"--enable-helm"}}'
+
+# Restart all ArgoCD components to pick up the new config
+echo -e "Restarting all ArgoCD deployments and statefulsets...\n"
+kubectl rollout restart deployment -n argocd --context control-cluster
+kubectl rollout restart statefulset -n argocd --context control-cluster
+
+# Wait for all deployments to be ready
+echo -e "Waiting for ArgoCD deployments, and statefulsets pods to be ready...\n"
+kubectl rollout status deployment -n argocd --context control-cluster --timeout=300s
+kubectl rollout status statefulset -n argocd --context control-cluster --timeout=300s
+
 # Start kubectl port-forward in the background
 echo -e "port forwarding the argocd-server to 127.0.0.1:9797 in the background\n"
 kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-cluster &
