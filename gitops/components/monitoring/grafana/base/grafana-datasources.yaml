@@ -11,62 +11,80 @@ data:
       - name: Mimir-Stage
         type: prometheus
         access: proxy
-        url: http://mimir-stage:9009/prometheus
+        url: http://mimir:9009/prometheus
         isDefault: true
         editable: true
         jsonData:
           timeInterval: 30s
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'stage'
       
       - name: Loki-Stage
         type: loki
         access: proxy
-        url: http://loki-stage:3100
+        url: http://loki:3100
         editable: true
         jsonData:
           maxLines: 1000
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'stage'
       
       - name: Tempo-Stage
         type: tempo
         access: proxy
-        url: http://tempo-stage:3200
+        url: http://tempo:3200
         editable: true
         jsonData:
           tracesToLogs:
-            datasourceUid: loki-stage
+            datasourceUid: 'loki-stage'
             tags: ['trace_id']
           tracesToMetrics:
-            datasourceUid: mimir-stage
+            datasourceUid: 'mimir-stage'
           serviceMap:
-            datasourceUid: mimir-stage
+            datasourceUid: 'mimir-stage'
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'stage'
       
       # Prod Datasources
       - name: Mimir-Prod
         type: prometheus
         access: proxy
-        url: http://mimir-prod:9009/prometheus
+        url: http://mimir:9009/prometheus
         editable: true
         jsonData:
           timeInterval: 30s
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'prod'
       
       - name: Loki-Prod
         type: loki
         access: proxy
-        url: http://loki-prod:3100
+        url: http://loki:3100
         editable: true
         jsonData:
           maxLines: 1000
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'prod'
       
       - name: Tempo-Prod
         type: tempo
         access: proxy
-        url: http://tempo-prod:3200
+        url: http://tempo:3200
         editable: true
         jsonData:
           tracesToLogs:
-            datasourceUid: loki-prod
+            datasourceUid: 'loki-prod'
             tags: ['trace_id']
           tracesToMetrics:
-            datasourceUid: mimir-prod
+            datasourceUid: 'mimir-prod'
           serviceMap:
-            datasourceUid: mimir-prod
+            datasourceUid: 'mimir-prod'
+          httpHeaderName1: 'X-Scope-OrgID'
+        secureJsonData:
+          httpHeaderValue1: 'prod'
 
