@@ -6,12 +6,12 @@ namespace: instrumented-app-ns
 resources:
   - ../../base
   - namespace.yaml
-  - patches/app-deployment-patch.yaml
 
 commonLabels:
   environment: prod
 
 patches:
+  - path: patches/app-deployment-patch.yaml
   - path: env-patch.yaml
   - path: ingress-patch.yaml
 
