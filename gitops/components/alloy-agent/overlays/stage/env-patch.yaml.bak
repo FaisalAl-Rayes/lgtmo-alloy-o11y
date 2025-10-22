@@ -10,11 +10,11 @@ spec:
         - name: alloy
           env:
             - name: MIMIR_ENDPOINT
-              value: "192.168.67.2:30091"
+              value: "MONITORING_CLUSTER_IP:30090"
             - name: LOKI_ENDPOINT
-              value: "192.168.67.2:30101"
+              value: "MONITORING_CLUSTER_IP:30100"
             - name: TEMPO_ENDPOINT
-              value: "192.168.67.2:30201"
+              value: "MONITORING_CLUSTER_IP:30200"
             - name: ENVIRONMENT
-              value: "prod"
+              value: "stage"
 
