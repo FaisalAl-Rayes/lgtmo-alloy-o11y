@@ -16,6 +16,21 @@ data:
       }
       
       output {
+        metrics = [otelcol.processor.attributes.add_cluster_labels.input]
+        logs    = [otelcol.processor.attributes.add_cluster_labels.input]
+        traces  = [otelcol.processor.attributes.add_cluster_labels.input]
+      }
+    }
+    
+    // Attributes processor - adds source cluster labels to all telemetry
+    otelcol.processor.attributes "add_cluster_labels" {
+      action {
+        key = "source_cluster"
+        action = "insert"
+        value = env("ENVIRONMENT")
+      }
+      
+      output {
         metrics = [otelcol.processor.batch.default.input]
         logs    = [otelcol.processor.batch.default.input]
         traces  = [otelcol.processor.batch.default.input]
@@ -45,6 +60,11 @@ data:
           "X-Scope-OrgID" = env("ENVIRONMENT"),
         }
       }
+
+      # This is just to show how to add external labels to the Prometheus remote write
+      # external_labels = {
+      #   cluster = env("ENVIRONMENT"),
+      # }
     }
     
     // Loki Exporter for Logs (converts OTLP to Loki format)
