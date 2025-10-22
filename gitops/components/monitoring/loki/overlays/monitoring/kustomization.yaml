@@ -6,6 +6,7 @@ namespace: monitoring
 resources:
   - ../../base
   - loki-nodeport.yaml
+  - loki-nodeport-prod.yaml
 
 commonLabels:
   environment: monitoring

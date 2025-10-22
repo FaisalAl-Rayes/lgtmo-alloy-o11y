@@ -34,6 +34,8 @@ spec:
               value: "PLACEHOLDER_LOKI_ENDPOINT"
             - name: TEMPO_ENDPOINT
               value: "PLACEHOLDER_TEMPO_ENDPOINT"
+            - name: ENVIRONMENT
+              value: "default"
           ports:
             - name: http-metrics
               containerPort: 12345

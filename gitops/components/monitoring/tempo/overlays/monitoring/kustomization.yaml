@@ -6,6 +6,7 @@ namespace: monitoring
 resources:
   - ../../base
   - tempo-nodeport.yaml
+  - tempo-nodeport-prod.yaml
 
 commonLabels:
   environment: monitoring

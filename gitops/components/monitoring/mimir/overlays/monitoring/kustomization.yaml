@@ -6,6 +6,7 @@ namespace: monitoring
 resources:
   - ../../base
   - mimir-nodeport.yaml
+  - mimir-nodeport-prod.yaml
 
 commonLabels:
   environment: monitoring

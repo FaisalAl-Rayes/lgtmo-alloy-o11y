@@ -25,29 +25,34 @@ data:
     // Batch processor - batches telemetry data before export
     otelcol.processor.batch "default" {
       output {
-        metrics = [otelcol.exporter.otlp.metrics.input]
-        logs    = [otelcol.exporter.otlp.logs.input]
+        metrics = [otelcol.exporter.prometheus.metrics.input]
+        logs    = [otelcol.exporter.loki.logs.input]
         traces  = [otelcol.exporter.otlp.traces.input]
       }
     }
     
-    // OTLP Exporter for Metrics (to Mimir via OTLP)
-    otelcol.exporter.otlp "metrics" {
-      client {
-        endpoint = env("MIMIR_ENDPOINT")
-        tls {
-          insecure = true
+    // Prometheus Exporter for Metrics (converts OTLP to Prometheus format)
+    otelcol.exporter.prometheus "metrics" {
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+    
+    // Prometheus Remote Write to Mimir
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
         }
       }
     }
     
-    // OTLP Exporter for Logs (to Loki via OTLP)
-    otelcol.exporter.otlp "logs" {
-      client {
-        endpoint = env("LOKI_ENDPOINT")
-        tls {
-          insecure = true
-        }
+    // Loki Exporter for Logs (converts OTLP to Loki format)
+    otelcol.exporter.loki "logs" {
+      endpoint = "http://" + env("LOKI_ENDPOINT") + "/loki/api/v1/push"
+      
+      headers = {
+        "X-Scope-OrgID" = env("ENVIRONMENT"),
       }
     }
     
@@ -60,4 +65,3 @@ data:
         }
       }
     }
-

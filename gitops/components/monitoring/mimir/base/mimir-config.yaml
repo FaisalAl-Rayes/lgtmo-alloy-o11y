@@ -6,7 +6,7 @@ metadata:
 data:
   mimir.yaml: |
     target: all
-    multitenancy_enabled: false
+    multitenancy_enabled: true
     
     server:
       http_listen_port: 9009
