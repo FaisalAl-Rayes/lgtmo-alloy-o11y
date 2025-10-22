@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+namespace: argocd
+
+namePrefix: monitoring-
+
+patches:
+  - path: patches/monitoring-app-of-appsets-patch.yaml
