@@ -89,7 +89,7 @@ kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-
 argo_port_forward_pid=$!
 
 # Store the argocd initial admin password
-argoURL="127.0.0.1:9797"
+argoURL="http://127.0.0.1:9797"
 argoPassword=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" --context control-cluster | base64 -d)
 
 # Login to argocd
