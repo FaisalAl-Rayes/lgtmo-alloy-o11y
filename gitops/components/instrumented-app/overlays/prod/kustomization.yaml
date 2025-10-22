@@ -12,6 +12,5 @@ commonLabels:
 
 patches:
   - path: patches/app-deployment-patch.yaml
-  - path: env-patch.yaml
-  - path: ingress-patch.yaml
+  - path: patches/ingress-patch.yaml
 
