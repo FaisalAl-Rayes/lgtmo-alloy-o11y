@@ -12,7 +12,7 @@ spec:
     path: gitops/appsets/app-of-appsets/overlays/stage
 
   destination:
-    server: control-cluster
+    server: https://kubernetes.default.svc
     namespace: argocd
 
   syncPolicy:
