@@ -84,19 +84,10 @@ jobs:
           sed -i 's|image:.*:.*|image: ${{ needs.build-instrumented-app.outputs.stage-image }}|' gitops/components/instrumented-app/overlays/stage/patches/app-deployment-patch.yaml
           sed -i 's|image:.*:.*|image: ${{ needs.build-instrumented-app.outputs.prod-image }}|' gitops/components/instrumented-app/overlays/prod/patches/app-deployment-patch.yaml
 
-      - name: Generate and update manifests
-        run: |
-          kustomize build gitops/components/instrumented-app/overlays/stage > gitops/kustomized-output/instrumented-app-stage-manifests.yaml
-          kustomize build gitops/components/instrumented-app/overlays/prod > gitops/kustomized-output/instrumented-app-prod-manifests.yaml
-          sed -i '1s/^/# git commit: ${{ github.sha }}\n/' gitops/kustomized-output/instrumented-app-stage-manifests.yaml
-          sed -i '1s/^/# git commit: ${{ github.sha }}\n/' gitops/kustomized-output/instrumented-app-prod-manifests.yaml
-
       - name: Git setup, add, commit, and push
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "${{ env.GIT_EMAIL }}"
-          git add gitops/kustomized-output/instrumented-app-stage-manifests.yaml
-          git add gitops/kustomized-output/instrumented-app-prod-manifests.yaml
           git add gitops/components/instrumented-app/overlays/stage/patches/app-deployment-patch.yaml
           git add gitops/components/instrumented-app/overlays/prod/patches/app-deployment-patch.yaml
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
