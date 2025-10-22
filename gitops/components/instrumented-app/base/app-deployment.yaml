@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/open-telemetry/demo:1.10.0-frontend
+          image: quay.io/falrayes/lgtmo-demo-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

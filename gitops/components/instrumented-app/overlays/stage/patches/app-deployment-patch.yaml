@@ -3,14 +3,14 @@ kind: Deployment
 metadata:
   name: instrumented-app
 spec:
-  replicas: 3
   template:
     spec:
       containers:
         - name: app
+          image: quay.io/falrayes/lgtmo-demo-app:stage
           env:
             - name: ENVIRONMENT
-              value: "prod"
+              value: "stage"
             - name: OTEL_SERVICE_NAME
-              value: "instrumented-app-prod"
+              value: "instrumented-app-stage"
 

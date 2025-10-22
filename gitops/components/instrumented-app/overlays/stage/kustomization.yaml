@@ -6,6 +6,7 @@ namespace: instrumented-app-ns
 resources:
   - ../../base
   - namespace.yaml
+  - patches/app-deployment-patch.yaml
 
 commonLabels:
   environment: stage
