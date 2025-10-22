@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
     targetRevision: HEAD
-    path: gitops/appsets/app-of-appsets/overlays/stage
+    path: gitops/appsets/overlays/stage
 
   destination:
     server: https://kubernetes.default.svc
