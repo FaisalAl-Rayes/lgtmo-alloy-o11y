@@ -49,10 +49,17 @@ data:
     
     // Loki Exporter for Logs (converts OTLP to Loki format)
     otelcol.exporter.loki "logs" {
-      endpoint = "http://" + env("LOKI_ENDPOINT") + "/loki/api/v1/push"
-      
-      headers = {
-        "X-Scope-OrgID" = env("ENVIRONMENT"),
+      forward_to = [loki.write.logs.receiver]
+    }
+    
+    // Loki Write endpoint
+    loki.write "logs" {
+      endpoint {
+        url = "http://" + env("LOKI_ENDPOINT") + "/loki/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
+        }
       }
     }
     
