@@ -11,7 +11,7 @@ spec:
         generators:
           - list:
               elements:
-                - name: stage-cluster
+                - name: monitoring-cluster
                   nameNormalized: prometheus-operator
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
                   path: gitops/components/operators/prometheus-operator
