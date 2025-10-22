@@ -9,4 +9,5 @@ namePrefix: prod-
 
 patches:
   - path: patches/prod-alloy-agent-patch.yaml
+  - path: patches/prod-alloy-operator-patch.yaml
   - path: patches/prod-webapps-patch.yaml
