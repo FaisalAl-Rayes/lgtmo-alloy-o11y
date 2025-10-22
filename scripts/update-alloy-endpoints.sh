@@ -16,12 +16,12 @@ echo ""
 
 # Update stage overlay
 stage_patch="gitops/components/alloy-agent/overlays/stage/env-patch.yaml"
-sed -i.bak "s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30090/g; s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30100/g; s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30200/g" "$stage_patch"
+sed -i.bak "s/MONITORING_CLUSTER_IP/$monitoring_ip/g" "$stage_patch"
 echo "Updated: $stage_patch"
 
 # Update prod overlay  
 prod_patch="gitops/components/alloy-agent/overlays/prod/env-patch.yaml"
-sed -i.bak "s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30091/g; s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30101/g; s/MONITORING_CLUSTER_IP:[0-9]\+/$monitoring_ip:30201/g" "$prod_patch"
+sed -i.bak "s/MONITORING_CLUSTER_IP/$monitoring_ip/g" "$prod_patch"
 echo "Updated: $prod_patch"
 
 echo ""
