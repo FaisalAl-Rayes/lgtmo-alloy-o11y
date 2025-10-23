@@ -10,11 +10,11 @@ spec:
         - name: alloy
           env:
             - name: MIMIR_ENDPOINT
-              value: "192.168.67.2:30091"
+              value: "192.168.85.2:30091"
             - name: LOKI_ENDPOINT
-              value: "192.168.67.2:30101"
+              value: "192.168.85.2:30101"
             - name: TEMPO_ENDPOINT
-              value: "192.168.67.2:30201"
+              value: "192.168.85.2:30201"
             - name: ENVIRONMENT
               value: "prod"
 
