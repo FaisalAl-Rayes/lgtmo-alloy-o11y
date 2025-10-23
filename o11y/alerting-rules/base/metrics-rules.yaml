@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mimir-rules-metrics
+  namespace: monitoring
+data:
+  metrics-alerts.yaml: |
+    groups:
+      - name: metrics-alerts
+        interval: 30s
+        rules:
+          # High CPU Usage Alert
+          - alert: HighCPUUsage
+            expr: |
+              100 - (avg by (instance, tenant) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+              source: mimir
+              type: metrics
+            annotations:
+              summary: "High CPU usage detected on {{ $labels.instance }}"
+              description: "CPU usage is above 80% (current value: {{ $value }}%)"
+          
+          # High Memory Usage Alert
+          - alert: HighMemoryUsage
+            expr: |
+              (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+            for: 5m
+            labels:
+              severity: warning
+              source: mimir
+              type: metrics
+            annotations:
+              summary: "High memory usage on {{ $labels.instance }}"
+              description: "Memory usage is above 85% (current value: {{ $value }}%)"
+          
+          # High Request Rate
+          - alert: HighRequestRate
+            expr: |
+              sum by (tenant, service) (rate(http_requests_total[5m])) > 1000
+            for: 2m
+            labels:
+              severity: info
+              source: mimir
+              type: metrics
+            annotations:
+              summary: "High request rate for {{ $labels.service }} (tenant: {{ $labels.tenant }})"
+              description: "Request rate is {{ $value }} req/s"
+          
+          # High Error Rate
+          - alert: HighErrorRate
+            expr: |
+              (sum by (tenant, service) (rate(http_requests_total{status=~"5.."}[5m])) 
+              / 
+              sum by (tenant, service) (rate(http_requests_total[5m]))) * 100 > 5
+            for: 5m
+            labels:
+              severity: critical
+              source: mimir
+              type: metrics
+            annotations:
+              summary: "High error rate for {{ $labels.service }} (tenant: {{ $labels.tenant }})"
+              description: "Error rate is {{ $value }}%"
+          
+          # Service Down
+          - alert: ServiceDown
+            expr: |
+              up{job=~".*"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              source: mimir
+              type: metrics
+            annotations:
+              summary: "Service {{ $labels.job }} is down"
+              description: "{{ $labels.instance }} has been down for more than 1 minute"
+

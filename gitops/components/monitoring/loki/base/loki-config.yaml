@@ -34,7 +34,9 @@ data:
             period: 24h
     
     ruler:
-      alertmanager_url: http://localhost:9093
+      alertmanager_url: http://alertmanager.monitoring.svc.cluster.local:9093
+      enable_api: true
+      enable_alertmanager_v2: true
     
     limits_config:
       reject_old_samples: true

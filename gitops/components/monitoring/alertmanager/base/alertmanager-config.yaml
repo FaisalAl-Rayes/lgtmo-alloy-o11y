@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+    
+    route:
+      # Root route with default receiver
+      receiver: 'default'
+      group_by: ['alertname', 'cluster', 'service', 'tenant']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 12h
+      
+      # Child routes for different alert types
+      routes:
+        # Metrics alerts from Mimir
+        - receiver: 'metrics-alerts'
+          matchers:
+            - source="mimir"
+          continue: false
+        
+        # Log alerts from Loki
+        - receiver: 'log-alerts'
+          matchers:
+            - source="loki"
+          continue: false
+        
+        # Trace alerts from Tempo
+        - receiver: 'trace-alerts'
+          matchers:
+            - source="tempo"
+          continue: false
+        
+        # Critical alerts - escalate immediately
+        - receiver: 'critical'
+          matchers:
+            - severity="critical"
+          group_wait: 0s
+          repeat_interval: 5m
+          continue: true
+        
+        # Tenant-specific routing
+        - receiver: 'tenant-a'
+          matchers:
+            - tenant="tenant-a"
+          continue: false
+        
+        - receiver: 'tenant-b'
+          matchers:
+            - tenant="tenant-b"
+          continue: false
+    
+    receivers:
+      - name: 'default'
+        # Default receiver - you can add webhook, email, etc.
+        # For now, this acts as a catch-all
+      
+      - name: 'metrics-alerts'
+        # Configure for metric-specific alerts
+        # webhook_configs:
+        #   - url: 'http://your-webhook-url/metrics'
+      
+      - name: 'log-alerts'
+        # Configure for log-specific alerts
+        # webhook_configs:
+        #   - url: 'http://your-webhook-url/logs'
+      
+      - name: 'trace-alerts'
+        # Configure for trace-specific alerts
+        # webhook_configs:
+        #   - url: 'http://your-webhook-url/traces'
+      
+      - name: 'critical'
+        # Critical alerts - page immediately
+        # pagerduty_configs:
+        #   - service_key: 'your-pagerduty-key'
+      
+      - name: 'tenant-a'
+        # Tenant A specific notifications
+        # slack_configs:
+        #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        #     channel: '#tenant-a-alerts'
+      
+      - name: 'tenant-b'
+        # Tenant B specific notifications
+        # slack_configs:
+        #   - api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+        #     channel: '#tenant-b-alerts'
+    
+    inhibit_rules:
+      # Inhibit warning alerts if critical alert is firing
+      - source_matchers:
+          - severity="critical"
+        target_matchers:
+          - severity="warning"
+        equal: ['alertname', 'cluster', 'service']
+      
+      # Inhibit target alerts if source is in maintenance
+      - source_matchers:
+          - alertname="MaintenanceMode"
+        target_matchers:
+          - alertname!="MaintenanceMode"
+        equal: ['cluster', 'service']
+

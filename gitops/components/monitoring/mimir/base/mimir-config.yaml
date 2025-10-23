@@ -40,6 +40,12 @@ data:
           store: memberlist
         replication_factor: 1
     
+    ruler:
+      enable_api: true
+      alertmanager_url: http://alertmanager.monitoring.svc.cluster.local:9093
+      enable_alertmanager_v2: true
+      rule_path: /data/mimir/rules-data
+    
     ruler_storage:
       backend: filesystem
       filesystem:

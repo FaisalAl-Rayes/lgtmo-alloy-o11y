@@ -4,6 +4,6 @@ kind: Kustomization
 namespace: monitoring
 
 resources:
-  - metrics-rules.yaml
-  - logs-rules.yaml
-  - traces-rules.yaml
+  - ../../base
+  - alertmanager-nodeport.yaml
+
