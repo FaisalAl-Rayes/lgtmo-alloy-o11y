@@ -61,10 +61,10 @@ data:
         }
       }
 
-      # This is just to show how to add external labels to the Prometheus remote write
-      # external_labels = {
-      #   cluster = env("ENVIRONMENT"),
-      # }
+      // This is just to show how to add external labels to the Prometheus remote write
+      // external_labels = {
+      //   cluster = env("ENVIRONMENT"),
+      // }
     }
     
     // Loki Exporter for Logs (converts OTLP to Loki format)
