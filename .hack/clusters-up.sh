@@ -102,8 +102,11 @@ echo -e "port forwarding the argocd-server to 127.0.0.1:9797 in the background\n
 kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-cluster &
 argo_port_forward_pid=$!
 
+echo -e "Waiting for 5 seconds to make sure the port forwarding is started\n"
+sleep 5
+
 # Store the argocd initial admin password
-argoURL="http://127.0.0.1:9797"
+argoURL="127.0.0.1:9797"
 argoPassword=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" --context control-cluster | base64 -d)
 
 # Login to argocd
