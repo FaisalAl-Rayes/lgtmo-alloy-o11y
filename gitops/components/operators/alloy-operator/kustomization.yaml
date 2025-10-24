@@ -13,3 +13,9 @@ helmCharts:
     releaseName: alloy-operator
     namespace: alloy-system
     includeCRDs: true
+    valuesInline:
+      clustering:
+        enabled: true
+      controller:
+        replicas: 3
+        enableStatefulSetAutoDeletePVC: false
