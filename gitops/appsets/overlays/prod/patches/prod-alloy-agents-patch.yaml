@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: alloy-agent-set
+  namespace: argocd
+spec:
+  generators:
+    - merge:
+        mergeKeys:
+          - nameNormalized
+        generators:
+          - list:
+              elements:
+                # - name: prod-cluster
+                #   nameNormalized: alloy-agent
+                #   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                #   path: gitops/components/alloy-agent/overlays/prod
+                #   namespace: alloy-system
+                #   environment: prod
+                - name: prod-cluster
+                  nameNormalized: alloy-logs
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/alloy-logs/overlays/prod
+                  namespace: alloy-system
+                  environment: prod
+                - name: prod-cluster
+                  nameNormalized: alloy-metrics
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/alloy-metrics/overlays/prod
+                  namespace: alloy-system
+                  environment: prod
+                - name: prod-cluster
+                  nameNormalized: alloy-traces
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/alloy-traces/overlays/prod
+                  namespace: alloy-system
+                  environment: prod
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: prod
+

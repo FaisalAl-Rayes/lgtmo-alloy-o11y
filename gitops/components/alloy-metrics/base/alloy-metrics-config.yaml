@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-metrics-config
+  namespace: alloy-system
+data:
+  config.alloy: |
+    // OTLP Receiver - receives metrics from applications
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      
+      output {
+        metrics = [otelcol.processor.attributes.add_cluster_labels.input]
+      }
+    }
+    
+    // Attributes processor - adds source cluster labels to all telemetry
+    otelcol.processor.attributes "add_cluster_labels" {
+      action {
+        key = "source_cluster"
+        action = "insert"
+        value = env("ENVIRONMENT")
+      }
+      
+      output {
+        metrics = [otelcol.processor.batch.default.input]
+      }
+    }
+    
+    // Batch processor - batches telemetry data before export
+    otelcol.processor.batch "default" {
+      output {
+        metrics = [otelcol.exporter.prometheus.metrics.input]
+      }
+    }
+    
+    // Prometheus Exporter for Metrics (converts OTLP to Prometheus format)
+    otelcol.exporter.prometheus "metrics" {
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+    
+    // Prometheus Remote Write to Mimir
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
+        }
+      }
+
+      // This is just to show how to add external labels to the Prometheus remote write
+      // external_labels = {
+      //   cluster = env("ENVIRONMENT"),
+      // }
+    }
+

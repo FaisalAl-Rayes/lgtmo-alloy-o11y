@@ -1,6 +1,6 @@
 resources:
   - ../../base/operators/alloy-operator
-  - ../../base/alloy-agent
+  - ../../base/alloy-agents
   - ../../base/webapps
 
 namespace: argocd
@@ -8,6 +8,6 @@ namespace: argocd
 namePrefix: prod-
 
 patches:
-  - path: patches/prod-alloy-agent-patch.yaml
+  - path: patches/prod-alloy-agents-patch.yaml
   - path: patches/prod-alloy-operator-patch.yaml
   - path: patches/prod-webapps-patch.yaml

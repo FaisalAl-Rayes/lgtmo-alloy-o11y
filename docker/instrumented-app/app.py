@@ -25,14 +25,19 @@ resource = Resource.create({
     "service.namespace": os.getenv("NAMESPACE", "default")
 })
 
-# Get Alloy endpoint from environment
-alloy_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://alloy.default.svc.cluster.local:4317")
+# Get Alloy endpoints from environment (with fallback to generic endpoint)
+logs_endpoint = os.getenv("OTEL_EXPORTER_OTLP_LOGS_ENDPOINT", 
+                          os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://alloy-logs.alloy-system.svc.cluster.local:4317"))
+metrics_endpoint = os.getenv("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT",
+                             os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://alloy-metrics.alloy-system.svc.cluster.local:4317"))
+traces_endpoint = os.getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+                            os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://alloy-traces.alloy-system.svc.cluster.local:4317"))
 
 # Setup Logging
 logger_provider = LoggerProvider(resource=resource)
 set_logger_provider(logger_provider)
 log_exporter = OTLPLogExporter(
-    endpoint=alloy_endpoint,
+    endpoint=logs_endpoint,
     insecure=True
 )
 logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
@@ -47,7 +52,7 @@ logger.addHandler(handler)
 trace.set_tracer_provider(TracerProvider(resource=resource))
 tracer_provider = trace.get_tracer_provider()
 otlp_exporter = OTLPSpanExporter(
-    endpoint=alloy_endpoint,
+    endpoint=traces_endpoint,
     insecure=True
 )
 span_processor = BatchSpanProcessor(otlp_exporter)
@@ -56,7 +61,7 @@ tracer_provider.add_span_processor(span_processor)
 # Setup Metrics
 metric_reader = PeriodicExportingMetricReader(
     OTLPMetricExporter(
-        endpoint=alloy_endpoint,
+        endpoint=metrics_endpoint,
         insecure=True
     ),
     export_interval_millis=5000
@@ -236,6 +241,8 @@ if __name__ == '__main__':
     logger.info(f"Starting instrumented application on port 8080")
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'unknown')}")
     logger.info(f"Service: {os.getenv('OTEL_SERVICE_NAME', 'instrumented-app')}")
-    logger.info(f"OTLP Endpoint: {alloy_endpoint}")
+    logger.info(f"OTLP Logs Endpoint: {logs_endpoint}")
+    logger.info(f"OTLP Metrics Endpoint: {metrics_endpoint}")
+    logger.info(f"OTLP Traces Endpoint: {traces_endpoint}")
     app.run(host='0.0.0.0', port=8080, debug=False)
 

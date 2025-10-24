@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: alloy-metrics
+  namespace: alloy-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: alloy
+          env:
+            - name: MIMIR_ENDPOINT
+              value: "192.168.49.2:30090"
+            - name: ENVIRONMENT
+              value: "stage"
+

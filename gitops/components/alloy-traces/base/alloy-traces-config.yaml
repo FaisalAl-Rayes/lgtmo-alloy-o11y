@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-traces-config
+  namespace: alloy-system
+data:
+  config.alloy: |
+    // OTLP Receiver - receives traces from applications
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      
+      output {
+        traces = [otelcol.processor.attributes.add_cluster_labels.input]
+      }
+    }
+    
+    // Attributes processor - adds source cluster labels to all telemetry
+    otelcol.processor.attributes "add_cluster_labels" {
+      action {
+        key = "source_cluster"
+        action = "insert"
+        value = env("ENVIRONMENT")
+      }
+      
+      output {
+        traces = [otelcol.processor.batch.default.input]
+      }
+    }
+    
+    // Batch processor - batches telemetry data before export
+    otelcol.processor.batch "default" {
+      output {
+        traces = [otelcol.exporter.otlp.traces.input]
+      }
+    }
+    
+    // OTLP Exporter for Traces (to Tempo)
+    otelcol.exporter.otlp "traces" {
+      client {
+        endpoint = env("TEMPO_ENDPOINT")
+        tls {
+          insecure = true
+        }
+      }
+    }
+

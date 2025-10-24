@@ -23,8 +23,12 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://alloy.alloy-system.svc.cluster.local:4317"
+            - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+              value: "http://alloy-logs.alloy-system.svc.cluster.local:4317"
+            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+              value: "http://alloy-metrics.alloy-system.svc.cluster.local:4317"
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: "http://alloy-traces.alloy-system.svc.cluster.local:4317"
             - name: OTEL_SERVICE_NAME
               value: "instrumented-app"
             - name: ENVIRONMENT
@@ -35,8 +39,6 @@ spec:
                   fieldPath: metadata.namespace
             - name: FRONTEND_ADDR
               value: ":8080"
-            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-              value: "http://alloy.alloy-system.svc.cluster.local:4317"
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: "service.name=instrumented-app,deployment.environment=$(ENVIRONMENT)"
           resources:

@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-logs-config
+  namespace: alloy-system
+data:
+  config.alloy: |
+    // OTLP Receiver - receives logs from applications
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      
+      output {
+        logs = [otelcol.processor.attributes.add_cluster_labels.input]
+      }
+    }
+    
+    // Attributes processor - adds source cluster labels to all telemetry
+    otelcol.processor.attributes "add_cluster_labels" {
+      action {
+        key = "source_cluster"
+        action = "insert"
+        value = env("ENVIRONMENT")
+      }
+      
+      output {
+        logs = [otelcol.processor.batch.default.input]
+      }
+    }
+    
+    // Batch processor - batches telemetry data before export
+    otelcol.processor.batch "default" {
+      output {
+        logs = [otelcol.exporter.loki.logs.input]
+      }
+    }
+    
+    // Loki Exporter for Logs (converts OTLP to Loki format)
+    otelcol.exporter.loki "logs" {
+      forward_to = [loki.write.logs.receiver]
+    }
+    
+    // Loki Write endpoint
+    loki.write "logs" {
+      endpoint {
+        url = "http://" + env("LOKI_ENDPOINT") + "/loki/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
+        }
+      }
+    }
+

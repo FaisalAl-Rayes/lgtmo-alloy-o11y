@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alloy-traces
+  namespace: alloy-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: alloy
+          env:
+            - name: TEMPO_ENDPOINT
+              value: "192.168.49.2:30201"
+            - name: ENVIRONMENT
+              value: "prod"
+
