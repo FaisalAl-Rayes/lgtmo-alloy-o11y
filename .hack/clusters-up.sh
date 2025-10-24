@@ -120,6 +120,10 @@ argocd cluster add --upsert stage-cluster --name stage-cluster --label environme
 argocd cluster add --upsert prod-cluster --name prod-cluster --label environment=prod -y
 argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label environment=monitoring -y
 
+# Update the Alloy agent configurations with the actual monitoring cluster IP
+echo -e "Updating the Alloy agent configurations with the actual monitoring cluster IP...\n"
+./scripts/update-alloy-endpoints.sh
+
 # Press Enter to interrupt the port forwarding background process
 echo -e "\n\nPress Enter to stop port-forwarding..."
 read
