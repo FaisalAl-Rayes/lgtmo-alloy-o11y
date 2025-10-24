@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: quay.io/falrayes/lgtmo-demo-app:prod-458ac88cd202d74016e94ae3fd9af5a5dc42a230
+          image: quay.io/falrayes/lgtmo-demo-app:prod-6bb8c820c5750958df1f67e2223eabb4c8a004e0
           env:
             - name: ENVIRONMENT
               value: "prod"
