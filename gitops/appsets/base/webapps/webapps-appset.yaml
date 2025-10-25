@@ -12,10 +12,16 @@ spec:
           - list:
               elements:
                 - name: stage-cluster
-                  nameNormalized: instrumented-app
+                  nameNormalized: full-otel-instrumented-app
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
-                  path: gitops/components/instrumented-app/overlays/stage
-                  namespace: instrumented-app-ns
+                  path: gitops/components/full-otel-instrumented-app/overlays/stage
+                  namespace: full-otel-instrumented-app-ns
+                  environment: stage
+                - name: stage-cluster
+                  nameNormalized: prom-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/prom-otel-instrumented-app/overlays/stage
+                  namespace: prom-otel-instrumented-app-ns
                   environment: stage
           - clusters:
               selector:

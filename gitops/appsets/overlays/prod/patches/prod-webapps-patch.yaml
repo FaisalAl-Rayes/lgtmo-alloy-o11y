@@ -12,10 +12,16 @@ spec:
           - list:
               elements:
                 - name: prod-cluster
-                  nameNormalized: instrumented-app
+                  nameNormalized: full-otel-instrumented-app
                   repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
-                  path: gitops/components/instrumented-app/overlays/prod
-                  namespace: instrumented-app-ns
+                  path: gitops/components/full-otel-instrumented-app/overlays/prod
+                  namespace: full-otel-instrumented-app-ns
+                  environment: prod
+                - name: prod-cluster
+                  nameNormalized: prom-otel-instrumented-app
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/prom-otel-instrumented-app/overlays/prod
+                  namespace: prom-otel-instrumented-app-ns
                   environment: prod
           - clusters:
               selector:
