@@ -1,46 +1,44 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: instrumented-app
+  name: prom-otel-instrumented-app
   labels:
-    app: instrumented-app
+    app: prom-otel-instrumented-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: instrumented-app
+      app: prom-otel-instrumented-app
   template:
     metadata:
       labels:
-        app: instrumented-app
+        app: prom-otel-instrumented-app
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: app
-          image: quay.io/falrayes/lgtmo-demo-app:latest
+          image: quay.io/falrayes/prom-otel-instrumented-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
           env:
-            - name: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
-              value: "http://alloy-logs.alloy-system.svc.cluster.local:4317"
-            - name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
-              value: "http://alloy-metrics.alloy-system.svc.cluster.local:4317"
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: "http://alloy-traces.alloy-system.svc.cluster.local:4317"
             - name: OTEL_SERVICE_NAME
-              value: "instrumented-app"
+              value: "prom-otel-instrumented-app"
             - name: ENVIRONMENT
               value: "default"
             - name: NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: FRONTEND_ADDR
-              value: ":8080"
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "service.name=instrumented-app,deployment.environment=$(ENVIRONMENT)"
+              value: "service.name=prom-otel-instrumented-app,deployment.environment=$(ENVIRONMENT)"
           resources:
             requests:
               cpu: 100m

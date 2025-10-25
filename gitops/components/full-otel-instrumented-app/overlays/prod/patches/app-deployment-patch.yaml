@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: instrumented-app
+  name: full-otel-instrumented-app
 spec:
   replicas: 3
   template:
     spec:
       containers:
         - name: app
-          image: quay.io/falrayes/lgtmo-demo-app:prod-6bb8c820c5750958df1f67e2223eabb4c8a004e0
+          image: quay.io/falrayes/full-otel-instrumented-app:prod-latest
           env:
             - name: ENVIRONMENT
               value: "prod"
             - name: OTEL_SERVICE_NAME
-              value: "instrumented-app-prod"
+              value: "full-otel-instrumented-app-prod"
 

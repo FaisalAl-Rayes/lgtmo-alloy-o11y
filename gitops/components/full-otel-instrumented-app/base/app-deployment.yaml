@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: instrumented-app
+  name: full-otel-instrumented-app
   labels:
-    app: instrumented-app
+    app: full-otel-instrumented-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: instrumented-app
+      app: full-otel-instrumented-app
   template:
     metadata:
       labels:
-        app: instrumented-app
+        app: full-otel-instrumented-app
     spec:
       containers:
         - name: app
-          image: quay.io/falrayes/lgtmo-demo-app:latest
+          image: quay.io/falrayes/full-otel-instrumented-app:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -30,7 +30,7 @@ spec:
             - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
               value: "http://alloy-traces.alloy-system.svc.cluster.local:4317"
             - name: OTEL_SERVICE_NAME
-              value: "instrumented-app"
+              value: "full-otel-instrumented-app"
             - name: ENVIRONMENT
               value: "default"
             - name: NAMESPACE
@@ -40,7 +40,7 @@ spec:
             - name: FRONTEND_ADDR
               value: ":8080"
             - name: OTEL_RESOURCE_ATTRIBUTES
-              value: "service.name=instrumented-app,deployment.environment=$(ENVIRONMENT)"
+              value: "service.name=full-otel-instrumented-app,deployment.environment=$(ENVIRONMENT)"
           resources:
             requests:
               cpu: 100m
