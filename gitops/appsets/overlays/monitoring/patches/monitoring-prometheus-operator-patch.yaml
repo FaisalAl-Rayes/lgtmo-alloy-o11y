@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: prometheus-operator-set
+  namespace: argocd
+spec:
+  generators:
+    - merge:
+        mergeKeys:
+          - nameNormalized
+        generators:
+          - list:
+              elements:
+                - name: monitoring-cluster
+                  nameNormalized: prometheus-operator
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
+                  path: gitops/components/operators/prometheus-operator
+                  namespace: monitoring
+                  environment: monitoring
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: monitoring
+
