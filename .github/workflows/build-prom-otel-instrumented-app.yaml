@@ -91,4 +91,6 @@ jobs:
           git add gitops/components/prom-otel-instrumented-app/overlays/stage/patches/app-deployment-patch.yaml
           git add gitops/components/prom-otel-instrumented-app/overlays/prod/patches/app-deployment-patch.yaml
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git fetch origin master
+          git rebase origin/master
           git push
