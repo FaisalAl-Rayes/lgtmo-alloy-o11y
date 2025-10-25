@@ -122,7 +122,7 @@ argocd cluster add --upsert monitoring-cluster --name monitoring-cluster --label
 
 # Update the Alloy agent configurations with the actual monitoring cluster IP
 echo -e "Updating the Alloy agent configurations with the actual monitoring cluster IP...\n"
-./scripts/update-alloy-endpoints.sh
+./scripts/update-alloy-agents-endpoints.sh
 
 # Press Enter to interrupt the port forwarding background process
 echo -e "\n\nPress Enter to stop port-forwarding..."

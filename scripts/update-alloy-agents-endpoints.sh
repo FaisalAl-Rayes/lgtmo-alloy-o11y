@@ -106,7 +106,7 @@ generate_config \
     "gitops/components/alloy-logs/overlays/stage/env-patch.yaml.tmpl" \
     "gitops/components/alloy-logs/overlays/stage/env-patch.yaml" \
     "${monitoring_ip}:${STAGE_LOKI_PORT}" \
-    "" \
+    "${monitoring_ip}:${STAGE_MIMIR_PORT}" \
     ""
 
 # Generate alloy-logs prod overlay from template
@@ -114,7 +114,7 @@ generate_config \
     "gitops/components/alloy-logs/overlays/prod/env-patch.yaml.tmpl" \
     "gitops/components/alloy-logs/overlays/prod/env-patch.yaml" \
     "${monitoring_ip}:${PROD_LOKI_PORT}" \
-    "" \
+    "${monitoring_ip}:${PROD_MIMIR_PORT}" \
     ""
 
 echo ""
@@ -142,7 +142,7 @@ generate_config \
     "gitops/components/alloy-traces/overlays/stage/env-patch.yaml.tmpl" \
     "gitops/components/alloy-traces/overlays/stage/env-patch.yaml" \
     "" \
-    "" \
+    "${monitoring_ip}:${STAGE_MIMIR_PORT}" \
     "${monitoring_ip}:${STAGE_TEMPO_PORT}"
 
 # Generate alloy-traces prod overlay from template
@@ -150,7 +150,7 @@ generate_config \
     "gitops/components/alloy-traces/overlays/prod/env-patch.yaml.tmpl" \
     "gitops/components/alloy-traces/overlays/prod/env-patch.yaml" \
     "" \
-    "" \
+    "${monitoring_ip}:${PROD_MIMIR_PORT}" \
     "${monitoring_ip}:${PROD_TEMPO_PORT}"
 
 echo ""
@@ -182,4 +182,6 @@ echo "  Prod:"
 echo "    Loki:  ${monitoring_ip}:${PROD_LOKI_PORT}"
 echo "    Mimir: ${monitoring_ip}:${PROD_MIMIR_PORT}"
 echo "    Tempo: ${monitoring_ip}:${PROD_TEMPO_PORT}"
+echo ""
+echo -e "${GREEN}Note: All Alloy agents will now send their own internal metrics to Mimir for self-monitoring!${NC}"
 

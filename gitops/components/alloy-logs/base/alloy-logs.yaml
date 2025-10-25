@@ -1,10 +1,35 @@
-apiVersion: v1
-kind: ConfigMap
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: Alloy
 metadata:
-  name: alloy-logs-config
+  name: alloy-logs
   namespace: alloy-system
-data:
-  config.alloy: |
+  labels:
+    app: alloy-logs
+spec:
+  mode: daemonset
+  image: grafana/alloy:v1.0.0
+  
+  env:
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: LOKI_ENDPOINT
+      value: "PLACEHOLDER_LOKI_ENDPOINT"
+    - name: MIMIR_ENDPOINT
+      value: "PLACEHOLDER_MIMIR_ENDPOINT"
+    - name: ENVIRONMENT
+      value: "default"
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  config: |
     // OTLP Receiver - receives logs from applications
     otelcol.receiver.otlp "default" {
       grpc {
@@ -54,5 +79,31 @@ data:
           "X-Scope-OrgID" = env("ENVIRONMENT"),
         }
       }
+    }
+    
+    // Self-monitoring: Send Alloy's own metrics to Mimir
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
+        }
+      }
+
+      external_labels = {
+        cluster = env("ENVIRONMENT"),
+        job = "alloy-logs",
+      }
+    }
+    
+    prometheus.scrape "alloy_self" {
+      targets = [{
+        __address__ = "localhost:12345",
+      }]
+      
+      forward_to = [prometheus.remote_write.mimir.receiver]
+      
+      scrape_interval = "30s"
     }
 

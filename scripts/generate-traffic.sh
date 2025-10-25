@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-app_url="http://localhost:8282"
+# Get port from first argument, default to 8282 if not provided
+port="${1:-8282}"
+app_url="http://localhost:${port}"
 
 echo "Generating traffic to application..."
 echo "Target: $app_url"

@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - app-deployment.yaml
   - app-service.yaml
+  - app-servicemonitor.yaml

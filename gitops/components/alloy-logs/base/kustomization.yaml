@@ -4,7 +4,5 @@ kind: Kustomization
 namespace: alloy-system
 
 resources:
-  - alloy-logs-config.yaml
-  - alloy-logs-daemonset.yaml
-  - alloy-logs-service.yaml
+  - alloy-logs.yaml
 

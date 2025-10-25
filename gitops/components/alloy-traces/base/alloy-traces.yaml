@@ -1,0 +1,103 @@
+apiVersion: monitoring.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: alloy-traces
+  namespace: alloy-system
+  labels:
+    app: alloy-traces
+spec:
+  mode: deployment
+  image: grafana/alloy:v1.0.0
+  
+  env:
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    - name: TEMPO_ENDPOINT
+      value: "PLACEHOLDER_TEMPO_ENDPOINT"
+    - name: MIMIR_ENDPOINT
+      value: "PLACEHOLDER_MIMIR_ENDPOINT"
+    - name: ENVIRONMENT
+      value: "default"
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  config: |
+    // OTLP Receiver - receives traces from applications
+    otelcol.receiver.otlp "default" {
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+      
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      
+      output {
+        traces = [otelcol.processor.attributes.add_cluster_labels.input]
+      }
+    }
+    
+    // Attributes processor - adds source cluster labels to all telemetry
+    otelcol.processor.attributes "add_cluster_labels" {
+      action {
+        key = "source_cluster"
+        action = "insert"
+        value = env("ENVIRONMENT")
+      }
+      
+      output {
+        traces = [otelcol.processor.batch.default.input]
+      }
+    }
+    
+    // Batch processor - batches telemetry data before export
+    otelcol.processor.batch "default" {
+      output {
+        traces = [otelcol.exporter.otlp.traces.input]
+      }
+    }
+    
+    // OTLP Exporter for Traces (to Tempo)
+    otelcol.exporter.otlp "traces" {
+      client {
+        endpoint = env("TEMPO_ENDPOINT")
+        tls {
+          insecure = true
+        }
+      }
+    }
+    
+    // Self-monitoring: Send Alloy's own metrics to Mimir
+    prometheus.remote_write "mimir" {
+      endpoint {
+        url = "http://" + env("MIMIR_ENDPOINT") + "/api/v1/push"
+        
+        headers = {
+          "X-Scope-OrgID" = env("ENVIRONMENT"),
+        }
+      }
+
+      external_labels = {
+        cluster = env("ENVIRONMENT"),
+        job = "alloy-traces",
+      }
+    }
+    
+    prometheus.scrape "alloy_self" {
+      targets = [{
+        __address__ = "localhost:12345",
+      }]
+      
+      forward_to = [prometheus.remote_write.mimir.receiver]
+      
+      scrape_interval = "30s"
+    }
+
