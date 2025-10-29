@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: quay.io/falrayes/prom-otel-instrumented-app-demo:prod-46d5b452bfaf711b4e3ba0445a9a1917b063adc9
+          image: quay.io/falrayes/prom-otel-instrumented-app-demo:prod-a9977901e0d32e2da4df897c0d3ff6816791fc54
           env:
             - name: ENVIRONMENT
               value: "prod"
