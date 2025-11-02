@@ -68,12 +68,6 @@ spec:
         // Loki Exporter for Logs (converts OTLP to Loki format)
         otelcol.exporter.loki "logs" {
           forward_to = [loki.relabel.add_cluster_labels.receiver]
-          
-          // Extract trace context as Loki labels
-          labels_attributes = {
-            traceid = "trace_id",
-            spanid = "span_id",
-          }
         }
         
         // PodLogs scraper for collecting stdout/stderr from pods
