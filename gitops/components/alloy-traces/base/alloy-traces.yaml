@@ -82,6 +82,9 @@ spec:
         otelcol.exporter.otlp "traces" {
           client {
             endpoint = env("TEMPO_ENDPOINT")
+            headers = {
+              "X-Scope-OrgID" = env("ENVIRONMENT"),
+            }
             tls {
               insecure = true
             }
