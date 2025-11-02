@@ -51,8 +51,10 @@ data:
         jsonData:
           tracesToLogs:
             datasourceUid: 'loki-stage'
-            filterByTraceID: true
+            filterByTraceID: false
             filterBySpanID: false
+            customQuery: true
+            query: '{exporter="OTLP",source_cluster="stage"} |~ "traceid.*$${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-stage'
           serviceMap:
@@ -104,8 +106,10 @@ data:
         jsonData:
           tracesToLogs:
             datasourceUid: 'loki-prod'
-            filterByTraceID: true
+            filterByTraceID: false
             filterBySpanID: false
+            customQuery: true
+            query: '{exporter="OTLP",source_cluster="prod"} |~ "traceid.*$${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-prod'
           serviceMap:
