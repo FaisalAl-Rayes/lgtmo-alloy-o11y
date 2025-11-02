@@ -54,7 +54,7 @@ data:
             filterByTraceID: false
             filterBySpanID: false
             customQuery: true
-            query: '{exporter="OTLP",source_cluster="stage"} |~ "traceid.*$${__trace.traceId}"'
+            query: '{exporter="OTLP",source_cluster="stage"} |~ "${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-stage'
           serviceMap:
@@ -109,7 +109,7 @@ data:
             filterByTraceID: false
             filterBySpanID: false
             customQuery: true
-            query: '{exporter="OTLP",source_cluster="prod"} |~ "traceid.*$${__trace.traceId}"'
+            query: '{exporter="OTLP",source_cluster="prod"} |~ "${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-prod'
           serviceMap:
@@ -117,4 +117,3 @@ data:
           httpHeaderName1: 'X-Scope-OrgID'
         secureJsonData:
           httpHeaderValue1: 'prod'
-
