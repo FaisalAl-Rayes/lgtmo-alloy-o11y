@@ -32,6 +32,12 @@ data:
           maxLines: 1000
           httpHeaderName1: 'X-Scope-OrgID'
           manageAlerts: true
+          derivedFields:
+            - datasourceUid: 'tempo-stage'
+              matcherRegex: 'trace_id[=:](\w+)'
+              name: TraceID
+              url: '$${__value.raw}'
+              urlDisplayLabel: 'View Trace'
         secureJsonData:
           httpHeaderValue1: 'stage'
       
@@ -76,6 +82,12 @@ data:
           maxLines: 1000
           httpHeaderName1: 'X-Scope-OrgID'
           manageAlerts: true
+          derivedFields:
+            - datasourceUid: 'tempo-prod'
+              matcherRegex: 'trace_id[=:](\w+)'
+              name: TraceID
+              url: '$${__value.raw}'
+              urlDisplayLabel: 'View Trace'
         secureJsonData:
           httpHeaderValue1: 'prod'
       
