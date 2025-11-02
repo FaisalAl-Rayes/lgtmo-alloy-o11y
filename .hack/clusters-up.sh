@@ -14,6 +14,11 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM EXIT
 
+# Update /etc/hosts with multi-cluster.local entry (needed for macOS)
+echo -e "Updating /etc/hosts with multi-cluster.local entry...\n"
+./scripts/update-hosts-entry.sh
+
+echo -e "\nStarting cluster creation...\n"
 
 # Linux amd64
 if [[ "$(uname)" == "Linux" ]] && [[ "$(arch)" == "x86_64" ]]; then
@@ -112,7 +117,7 @@ kubectl rollout status statefulset -n argocd --context control-cluster --timeout
 
 # Start kubectl port-forward in the background
 echo -e "port forwarding the argocd-server to 127.0.0.1:9797 in the background\n"
-kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-cluster &
+kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-cluster > /dev/null 2>&1 &
 argo_port_forward_pid=$!
 
 echo -e "Waiting for 5 seconds to make sure the port forwarding is started\n"

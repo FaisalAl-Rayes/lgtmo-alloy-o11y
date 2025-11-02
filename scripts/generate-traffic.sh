@@ -2,7 +2,7 @@
 set -e
 
 # Get port from first argument, default to 8282 if not provided
-port="${1:-8282}"
+port="${1:-8080}"
 app_url="http://localhost:${port}"
 
 echo "Generating traffic to application..."
