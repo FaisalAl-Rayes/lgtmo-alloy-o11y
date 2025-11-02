@@ -38,6 +38,7 @@ data:
             - datasourceUid: 'tempo-stage'
               matcherRegex: '"traceid":"(\w+)"'
               name: TraceID
+              url: $${__value.raw}
         secureJsonData:
           httpHeaderValue1: 'stage'
       
@@ -90,6 +91,7 @@ data:
             - datasourceUid: 'tempo-prod'
               matcherRegex: '"traceid":"(\w+)"'
               name: TraceID
+              url: $${__value.raw}
         secureJsonData:
           httpHeaderValue1: 'prod'
       

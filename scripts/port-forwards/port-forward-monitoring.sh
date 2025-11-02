@@ -24,14 +24,14 @@ echo "  ✓ Grafana: http://localhost:3000"
 echo ""
 
 # Tempo
-# echo "Starting Tempo port-forwards..."
-# kubectl port-forward -n monitoring service/tempo 3200:3200 --context monitoring-cluster > /dev/null 2>&1 &
-# kubectl port-forward -n monitoring service/tempo 4317:4317 --context monitoring-cluster > /dev/null 2>&1 &
-# kubectl port-forward -n monitoring service/tempo 4318:4318 --context monitoring-cluster > /dev/null 2>&1 &
-# echo "  ✓ Tempo HTTP: http://localhost:3200"
-# echo "  ✓ Tempo OTLP gRPC: localhost:4317"
-# echo "  ✓ Tempo OTLP HTTP: http://localhost:4318"
-# echo ""
+echo "Starting Tempo port-forwards..."
+kubectl port-forward -n monitoring service/tempo 3200:3200 --context monitoring-cluster > /dev/null 2>&1 &
+kubectl port-forward -n monitoring service/tempo 4317:4317 --context monitoring-cluster > /dev/null 2>&1 &
+kubectl port-forward -n monitoring service/tempo 4318:4318 --context monitoring-cluster > /dev/null 2>&1 &
+echo "  ✓ Tempo HTTP: http://localhost:3200"
+echo "  ✓ Tempo OTLP gRPC: localhost:4317"
+echo "  ✓ Tempo OTLP HTTP: http://localhost:4318"
+echo ""
 
 # Loki
 echo "Starting Loki port-forwards..."
@@ -42,20 +42,20 @@ echo "  ✓ Loki gRPC: localhost:9096"
 echo ""
 
 # Mimir
-# echo "Starting Mimir port-forwards..."
-# kubectl port-forward -n monitoring service/mimir 9009:9009 --context monitoring-cluster > /dev/null 2>&1 &
-# kubectl port-forward -n monitoring service/mimir 9095:9095 --context monitoring-cluster > /dev/null 2>&1 &
-# echo "  ✓ Mimir HTTP: http://localhost:9009"
-# echo "  ✓ Mimir gRPC: localhost:9095"
-# echo ""
+echo "Starting Mimir port-forwards..."
+kubectl port-forward -n monitoring service/mimir 9009:9009 --context monitoring-cluster > /dev/null 2>&1 &
+kubectl port-forward -n monitoring service/mimir 9095:9095 --context monitoring-cluster > /dev/null 2>&1 &
+echo "  ✓ Mimir HTTP: http://localhost:9009"
+echo "  ✓ Mimir gRPC: localhost:9095"
+echo ""
 
 # Minio
-# echo "Starting Minio port-forwards..."
-# kubectl port-forward -n monitoring service/minio 9000:9000 --context monitoring-cluster > /dev/null 2>&1 &
-# kubectl port-forward -n monitoring service/minio 9001:9001 --context monitoring-cluster > /dev/null 2>&1 &
-# echo "  ✓ Minio API: http://localhost:9000"
-# echo "  ✓ Minio Console: http://localhost:9001"
-# echo ""
+echo "Starting Minio port-forwards..."
+kubectl port-forward -n monitoring service/minio 9000:9000 --context monitoring-cluster > /dev/null 2>&1 &
+kubectl port-forward -n monitoring service/minio 9001:9001 --context monitoring-cluster > /dev/null 2>&1 &
+echo "  ✓ Minio API: http://localhost:9000"
+echo "  ✓ Minio Console: http://localhost:9001"
+echo ""
 
 # Alloy-Alerts
 echo "Starting Alloy-Alerts port-forward..."
