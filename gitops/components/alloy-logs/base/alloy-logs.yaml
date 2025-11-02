@@ -54,6 +54,25 @@ spec:
           }
           
           output {
+            logs = [otelcol.processor.attributes.extract_trace_context.input]
+          }
+        }
+        
+        // Extract trace_id and span_id as attributes so they become Loki labels
+        otelcol.processor.attributes "extract_trace_context" {
+          // Move trace_id and span_id to attributes so Loki exporter can use them as labels
+          action {
+            key = "trace_id"
+            from_context = "trace_id"
+            action = "insert"
+          }
+          action {
+            key = "span_id"
+            from_context = "span_id"
+            action = "insert"
+          }
+          
+          output {
             logs = [otelcol.processor.batch.default.input]
           }
         }
