@@ -9,6 +9,7 @@ data:
     datasources:
       # Stage Datasources
       - name: Mimir-Stage
+        uid: mimir-stage
         type: prometheus
         access: proxy
         url: http://mimir:9009/prometheus
@@ -24,6 +25,7 @@ data:
           httpHeaderValue1: 'stage'
       
       - name: Loki-Stage
+        uid: loki-stage
         type: loki
         access: proxy
         url: http://loki:3100
@@ -42,6 +44,7 @@ data:
           httpHeaderValue1: 'stage'
       
       - name: Tempo-Stage
+        uid: tempo-stage
         type: tempo
         access: proxy
         url: http://tempo:3200
@@ -49,7 +52,7 @@ data:
         jsonData:
           tracesToLogs:
             datasourceUid: 'loki-stage'
-            tags: ['trace_id']
+            tags: ['traceid']
           tracesToMetrics:
             datasourceUid: 'mimir-stage'
           serviceMap:
@@ -60,6 +63,7 @@ data:
       
       # Prod Datasources
       - name: Mimir-Prod
+        uid: mimir-prod
         type: prometheus
         access: proxy
         url: http://mimir:9009/prometheus
@@ -74,6 +78,7 @@ data:
           httpHeaderValue1: 'prod'
       
       - name: Loki-Prod
+        uid: loki-prod
         type: loki
         access: proxy
         url: http://loki:3100
@@ -84,7 +89,7 @@ data:
           manageAlerts: true
           derivedFields:
             - datasourceUid: 'tempo-prod'
-              matcherRegex: 'trace_id[=:](\w+)'
+              matcherRegex: 'traceid[=:](\w+)'
               name: TraceID
               url: '$${__value.raw}'
               urlDisplayLabel: 'View Trace'
@@ -92,6 +97,7 @@ data:
           httpHeaderValue1: 'prod'
       
       - name: Tempo-Prod
+        uid: tempo-prod
         type: tempo
         access: proxy
         url: http://tempo:3200
@@ -99,7 +105,7 @@ data:
         jsonData:
           tracesToLogs:
             datasourceUid: 'loki-prod'
-            tags: ['trace_id']
+            tags: ['traceid']
           tracesToMetrics:
             datasourceUid: 'mimir-prod'
           serviceMap:
