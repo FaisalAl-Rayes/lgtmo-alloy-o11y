@@ -36,10 +36,8 @@ data:
           manageAlerts: true
           derivedFields:
             - datasourceUid: 'tempo-stage'
-              matcherRegex: '"traceid": "(\w+)"'
+              matcherRegex: '"traceid":"(\w+)"'
               name: TraceID
-              url: '$${__value.raw}'
-              urlDisplayLabel: 'View Trace'
         secureJsonData:
           httpHeaderValue1: 'stage'
       
@@ -90,10 +88,8 @@ data:
           manageAlerts: true
           derivedFields:
             - datasourceUid: 'tempo-prod'
-              matcherRegex: '"traceid":" (\w+)"'
+              matcherRegex: '"traceid":"(\w+)"'
               name: TraceID
-              url: '$${__value.raw}'
-              urlDisplayLabel: 'View Trace'
         secureJsonData:
           httpHeaderValue1: 'prod'
       
