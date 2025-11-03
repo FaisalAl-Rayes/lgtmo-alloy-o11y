@@ -59,6 +59,16 @@ data:
             query: '{exporter="OTLP",source_cluster="stage"} |~ "traceid.*$${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-stage'
+            spanStartTimeShift: '-15m'
+            spanEndTimeShift: '15m'
+            tags:
+              - key: 'source_cluster'
+                value: 'source_cluster'
+            queries:
+              - name: 'Request rate'
+                query: 'rate(app_requests_total{$${__tags}}[5m])'
+              - name: 'Error rate'
+                query: 'rate(app_errors_total{$${__tags}}[5m])'
           serviceMap:
             datasourceUid: 'mimir-stage'
           httpHeaderName1: 'X-Scope-OrgID'
@@ -116,6 +126,16 @@ data:
             query: '{exporter="OTLP",source_cluster="prod"} |~ "traceid.*$${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-prod'
+            spanStartTimeShift: '-15m'
+            spanEndTimeShift: '15m'
+            tags:
+              - key: 'source_cluster'
+                value: 'source_cluster'
+            queries:
+              - name: 'Request rate'
+                query: 'rate(app_requests_total{$${__tags}}[5m])'
+              - name: 'Error rate'
+                query: 'rate(app_errors_total{$${__tags}}[5m])'
           serviceMap:
             datasourceUid: 'mimir-prod'
           httpHeaderName1: 'X-Scope-OrgID'
