@@ -121,7 +121,7 @@ kubectl port-forward service/argocd-server -n argocd 9797:443 --context control-
 argo_port_forward_pid=$!
 
 echo -e "Waiting for 5 seconds to make sure the port forwarding is started\n"
-sleep 5
+sleep 10
 
 # Store the argocd initial admin password
 argoURL="127.0.0.1:9797"
