@@ -49,7 +49,7 @@ data:
         url: http://tempo:3200
         editable: true
         jsonData:
-          tracesToLogs:
+          tracesToLogsV2:
             datasourceUid: 'loki-stage'
             filterByTraceID: false
             filterBySpanID: false
@@ -104,12 +104,12 @@ data:
         url: http://tempo:3200
         editable: true
         jsonData:
-          tracesToLogs:
+          tracesToLogsV2:
             datasourceUid: 'loki-prod'
             filterByTraceID: false
             filterBySpanID: false
             customQuery: true
-            query: '{exporter="OTLP",source_cluster="stage"} |~ "traceid.*$${__trace.traceId}"'
+            query: '{exporter="OTLP",source_cluster="prod"} |~ "traceid.*$${__trace.traceId}"'
           tracesToMetrics:
             datasourceUid: 'mimir-prod'
           serviceMap:
