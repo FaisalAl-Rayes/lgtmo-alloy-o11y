@@ -20,52 +20,53 @@ This setup simulates a production-like multi-cluster environment using minikube 
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                         CONTROL CLUSTER                                   │
-│                          (ArgoCD GitOps)                                  │
+│                         CONTROL CLUSTER                                  │
+│                          (ArgoCD GitOps)                                 │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │ Manages deployments
-                    ┌────────────┼────────────┐
-                    │            │            │
-                    ▼            ▼            ▼
+                    ┌────────────┼───────────────────────────┐
+                    │            │                           │
+                    ▼            ▼                           ▼
     ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────────┐
     │  STAGE CLUSTER    │  │  PROD CLUSTER     │  │  MONITORING CLUSTER   │
     │                   │  │                   │  │                       │
-    │ ┌───────────────┐ │  │ ┌───────────────┐ │  │ ┌─────────────────┐ │
-    │ │ Applications  │ │  │ │ Applications  │ │  │ │ Grafana         │ │
-    │ │ - Full OTEL   │ │  │ │ - Full OTEL   │ │  │ │ - Dashboards    │ │
-    │ │ - Prom/OTEL   │ │  │ │ - Prom/OTEL   │ │  │ │ - Alerts UI     │ │
-    │ └───────────────┘ │  │ └───────────────┘ │  │ └─────────────────┘ │
+    │ ┌───────────────┐ │  │ ┌───────────────┐ │  │ ┌─────────────────┐   │
+    │ │ Applications  │ │  │ │ Applications  │ │  │ │ Grafana         │   │
+    │ │ - Full OTEL   │ │  │ │ - Full OTEL   │ │  │ │ - Dashboards    │   │
+    │ │ - Prom/OTEL   │ │  │ │ - Prom/OTEL   │ │  │ │ - Alerts UI     │   │
+    │ └───────────────┘ │  │ └───────────────┘ │  │ └─────────────────┘   │
     │                   │  │                   │  │                       │
-    │ ┌───────────────┐ │  │ ┌───────────────┐ │  │ ┌─────────────────┐ │
-    │ │ Alloy Agents  │ │  │ │ Alloy Agents  │ │  │ │ Mimir           │ │
-    │ │ - Metrics     │ │  │ │ - Metrics     │ │  │ │ - stage tenant  │ │
-    │ │ - Logs        │ │  │ │ - Logs        │ │  │ │ - prod tenant   │ │
-    │ │ - Traces      │ │  │ │ - Traces      │ │  │ │ - Alertmanager  │ │
-    │ └───────┬───────┘ │  │ └───────┬───────┘ │  │ └─────────────────┘ │
+    │ ┌───────────────┐ │  │ ┌───────────────┐ │  │ ┌─────────────────┐   │
+    │ │ Alloy Agents  │ │  │ │ Alloy Agents  │ │  │ │ Mimir           │   │
+    │ │ - Metrics     │ │  │ │ - Metrics     │ │  │ │ - stage tenant  │   │
+    │ │ - Logs        │ │  │ │ - Logs        │ │  │ │ - prod tenant   │   │
+    │ │ - Traces      │ │  │ │ - Traces      │ │  │ │ - Alertmanager  │   │
+    │ └───────┬───────┘ │  │ └───────┬───────┘ │  │ └─────────────────┘   │
     └─────────┼─────────┘  └─────────┼─────────┘  │                       │
-              │                      │             │ ┌─────────────────┐ │
-              │      Remote Write    │             │ │ Loki            │ │
-              │      Push Logs/Traces│             │ │ - stage tenant  │ │
-              └──────────────────────┼─────────────┤ │ - prod tenant   │ │
-                                     │             │ │ - S3 rules      │ │
-                                     └─────────────┤ └─────────────────┘ │
-                                                   │                       │
-                                                   │ ┌─────────────────┐ │
-                                                   │ │ Tempo           │ │
-                                                   │ │ - stage tenant  │ │
-                                                   │ │ - prod tenant   │ │
-                                                   │ └─────────────────┘ │
-                                                   │                       │
-                                                   │ ┌─────────────────┐ │
-                                                   │ │ MinIO (S3)      │ │
-                                                   │ │ - Loki rules    │ │
-                                                   │ └─────────────────┘ │
-                                                   │                       │
-                                                   │ ┌─────────────────┐ │
-                                                   │ │ Alloy-Alerts    │ │
-                                                   │ │ - Rules sync    │ │
-                                                   │ └─────────────────┘ │
-                                                   └───────────────────────┘
+              │    Remote Write      │            |  ┌─────────────────┐  │
+              │        Push          │            │  │ Loki            │  │
+              │  Metrics/Logs/Traces │            │  │ - stage tenant  │  │
+              └──────────────────────┼────────────┤  │ - prod tenant   │  │
+                                     │            │  │ - S3 rules      │  │
+                                     └────────────┤  └─────────────────┘  │
+                                                  │                       │
+                                                  │ ┌─────────────────┐   │
+                                                  │ │ Tempo           │   │
+                                                  │ │ - stage tenant  │   │
+                                                  │ │ - prod tenant   │   │
+                                                  │ └─────────────────┘   │
+                                                  │                       │
+                                                  │ ┌─────────────────┐   │
+                                                  │ │ MinIO (S3)      │   │
+                                                  │ │ - Loki rules    │   │
+                                                  │ └─────────────────┘   │
+                                                  │                       │
+                                                  │ ┌─────────────────┐   │
+                                                  │ │ Alloy-Agents    │   │
+                                                  | | - Alerts        |   |
+                                                  │ │   > Rules sync  │   │
+                                                  │ └─────────────────┘   │
+                                                  └───────────────────────┘
 ```
 
 ### Key Components
@@ -221,50 +222,50 @@ View alerts in Grafana: **Alerting → Alert rules**
 Each tenant has dedicated Alloy agents that collect and forward telemetry data:
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                       APPLICATION CLUSTER (Stage/Prod)                  │
-│                                                                         │
+┌───────────────────────────────────────────────────────────────────────┐
+│                       APPLICATION CLUSTER                             │
+│                          (Stage / Prod)                               │
 │  ┌──────────────────────────────────────────────────────────────────┐ │
-│  │                        APPLICATIONS                               │ │
-│  │                                                                   │ │
-│  │  ┌─────────────────────┐        ┌─────────────────────┐         │ │
-│  │  │ Full OTEL App       │        │ Prom/OTEL App       │         │ │
-│  │  │                     │        │                     │         │ │
-│  │  │ • OTEL SDK exports  │        │ • /metrics endpoint │         │ │
-│  │  │   to OTEL Collector │        │ • OTEL SDK for logs │         │ │
-│  │  │                     │        │   and traces        │         │ │
-│  │  └──────────┬──────────┘        └──────────┬──────────┘         │ │
-│  │             │ OTLP                          │ HTTP + OTLP        │ │
+│  │                        APPLICATIONS                              │ │
+│  │                                                                  │ │
+│  │  ┌─────────────────────┐         ┌───────────────────────┐       │ │
+│  │  │ Full OTEL App       │         │ Prom/OTEL App         │       │ │
+│  │  │                     │         │                       │       │ │
+│  │  │ • OTEL SDK exports  │         │ • /metrics endpoint   │       │ │
+│  │  │   to OTEL Collector │         │ • OTEL SDK for traces │       │ │
+│  │  │   (Alloy)           │         │                       │       │ │
+│  │  └──────────┬──────────┘         └──────────┬────────────┘       │ │
+│  │             │                               │                    │ │
 │  └─────────────┼───────────────────────────────┼────────────────────┘ │
-│                │                               │                       │
+│                │                               │                      │
 │  ┌─────────────▼───────────────────────────────▼────────────────────┐ │
-│  │                    GRAFANA ALLOY AGENTS                           │ │
-│  │                                                                   │ │
-│  │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐    │ │
-│  │  │ alloy-metrics  │  │  alloy-logs    │  │ alloy-traces   │    │ │
-│  │  │                │  │                │  │                │    │ │
-│  │  │ Discovers:     │  │ Discovers:     │  │ Receives:      │    │ │
-│  │  │ • ServiceMon   │  │ • PodLogs CRD  │  │ • OTLP traces  │    │ │
-│  │  │ • /metrics     │  │ • Pod logs     │  │ • Tail-based   │    │ │
-│  │  │                │  │                │  │   sampling     │    │ │
-│  │  │ Scrapes via:   │  │ Collects via:  │  │                │    │ │
-│  │  │ • HTTP polling │  │ • Loki.source  │  │ Forwards via:  │    │ │
-│  │  │                │  │   .kubernetes  │  │ • OTLP/HTTP    │    │ │
-│  │  │ Forwards via:  │  │                │  │                │    │ │
-│  │  │ • remote_write │  │ Forwards via:  │  │                │    │ │
-│  │  │   (Prometheus) │  │ • Loki HTTP    │  │                │    │ │
-│  │  └────────┬───────┘  └────────┬───────┘  └────────┬───────┘    │ │
-│  └───────────┼──────────────────────┼──────────────────────┼────────┘ │
-└──────────────┼──────────────────────┼──────────────────────┼──────────┘
-               │                      │                      │
-               │ Tenant-specific      │ Tenant-specific      │ Tenant-specific
-               │ Headers:             │ Headers:             │ Headers:
-               │ X-Scope-OrgID:stage  │ X-Scope-OrgID:stage  │ X-Scope-OrgID:stage
-               │                      │                      │
-               ▼                      ▼                      ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                         MONITORING CLUSTER                              │
-│                                                                         │
+│  │                    GRAFANA ALLOY AGENTS                          │ │
+│  │                                                                  │ │
+│  │  ┌────────────────┐     ┌────────────────┐    ┌────────────────┐ │ │
+│  │  │ alloy-metrics  │     │  alloy-logs    │    │ alloy-traces   │ │ │
+│  │  │                │     │                │    │                │ │ │
+│  │  │ Discovers:     │     │ Discovers:     │    │ Receives:      │ │ │
+│  │  │ • ServiceMon   │     │ • PodLogs CRD  │    │ • OTLP traces  │ │ │
+│  │  │ • /metrics     │     │ • Pod logs     │    │ • Tail-based   │ │ │
+│  │  │                │     │                │    │   sampling     │ │ │
+│  │  │ Scrapes via:   │     │ Collects via:  │    │                │ │ │
+│  │  │ • HTTP polling │     │ • Loki.source  │    │ Forwards via:  │ │ │
+│  │  │                │     │   .kubernetes  │    │ • OTLP/HTTP    │ │ │
+│  │  │ Forwards via:  │     │                │    │                │ │ │
+│  │  │ • remote_write │     │ Forwards via:  │    │                │ │ │
+│  │  │   (Prometheus) │     │ • Loki HTTP    │    │                │ │ │
+│  │  └────────┬───────┘     └────────┬───────┘    └────────┬───────┘ │ │
+│  └───────────┼──────────────────────┼─────────────────────┼─────────┘ │
+└──────────────┼──────────────────────┼─────────────────────┼───────────┘
+               │                      │                     │
+               │ Tenant-specific      │ Tenant-specific     │ Tenant-specific
+               │ Headers:             │ Headers:            │ Headers:
+               │ X-Scope-OrgID:stage  │ X-Scope-OrgID:stage │ X-Scope-OrgID:stage
+               │                      │                     │
+               ▼                      ▼                     ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                         MONITORING CLUSTER                           │
+│                                                                      │
 │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐    │
 │  │  MIMIR           │  │  LOKI            │  │  TEMPO           │    │
 │  │                  │  │                  │  │                  │    │
@@ -282,16 +283,16 @@ Each tenant has dedicated Alloy agents that collect and forward telemetry data:
 │  │  │ metrics    │  │  │  │ logs       │  │  │  │ traces     │  │    │
 │  │  └────────────┘  │  │  └────────────┘  │  │  └────────────┘  │    │
 │  └──────────────────┘  └──────────────────┘  └──────────────────┘    │
-│                                                                         │
-│  ┌───────────────────────────────────────────────────────────────┐    │
-│  │                       GRAFANA                                  │    │
-│  │                                                                │    │
-│  │  Multi-tenant datasources with X-Scope-OrgID headers          │    │
-│  │  • Query each tenant's data independently                     │    │
-│  │  • Unified dashboards with tenant filtering                   │    │
-│  │  • Alert visualization from Mimir AlertManager                │    │
-│  └───────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────────┘
+│                                                                      │
+│  ┌───────────────────────────────────────────────────────────────┐   │
+│  │                       GRAFANA                                 │   │
+│  │                                                               │   │
+│  │  Multi-tenant datasources with X-Scope-OrgID headers          │   │
+│  │  • Query each tenant's data independently                     │   │
+│  │  • Unified dashboards with tenant filtering                   │   │
+│  │  • Alert visualization from Mimir AlertManager                │   │
+│  └───────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Component Responsibilities
@@ -309,44 +310,44 @@ The alerting system uses a unified approach with PrometheusRule CRDs for both me
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│              KUBERNETES API (monitoring-cluster)                         │
-│                                                                          │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │                    PrometheusRule CRDs                            │  │
-│  │                                                                   │  │
-│  │  ┌─────────────────────┐      ┌─────────────────────┐           │  │
-│  │  │ Metrics Rules       │      │ Log Rules           │           │  │
-│  │  │                     │      │                     │           │  │
-│  │  │ labels:             │      │ labels:             │           │  │
-│  │  │   tenant: stage     │      │   tenant: stage     │           │  │
-│  │  │   type: metrics ◄───┼──┐   │   type: logs    ◄───┼──┐        │  │
-│  │  │                     │  │   │                     │  │        │  │
-│  │  │ spec:               │  │   │ spec:               │  │        │  │
-│  │  │   expr: |           │  │   │   expr: |           │  │        │  │
-│  │  │     rate(errors[5m])│  │   │     rate({level=    │  │        │  │
-│  │  │       > 0.05        │  │   │       "error"}[5m]) │  │        │  │
-│  │  │     ↑ PromQL        │  │   │     ↑ LogQL         │  │        │  │
-│  │  └─────────────────────┘  │   └─────────────────────┘  │        │  │
-│  └───────────────────────────┼──────────────────────────────┼────────┘  │
+│              KUBERNETES API (monitoring-cluster)                        │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────--─┐ │
+│  │                    PrometheusRule CRDs                             │ │
+│  │                                                                    │ |
+│  │   ┌─────────────────────┐        ┌─────────────────────┐           │ |
+│  │   │ Metrics Rules       │        │ Log Rules           │           │ |
+│  │   │                     │        │                     │           │ |
+│  │   │ labels:             │        │ labels:             │           │ |
+│  │   │   tenant: stage     │        │   tenant: stage     │           │ |
+│  │   │   type: metrics ◄───┼──┐     │   type: logs    ◄───┼──┐        │ |
+│  │   │                     │  │     │                     │  │        │ |
+│  │   │ spec:               │  │     │ spec:               │  │        │ |
+│  │   │   expr: |           │  │     │   expr: |           │  │        │ |
+│  │   │     rate(errors[5m])│  │     │     rate({level=    │  │        │ |
+│  │   │       > 0.05        │  │     │       "error"}[5m]) │  │        │ |
+│  │   │     ↑ PromQL        │  │     │     ↑ LogQL         │  │        │ |
+│  │   └─────────────────────┘  │     └─────────────────────┘  │        │ |
+│  └──────────────────────────-─┼──────────────────────────────┼────────┘ │
 └───────────────────────────────┼──────────────────────────────┼──────────┘
                                 │ Watches                      │ Watches
                                 │ (label selector)             │ (label selector)
                                 ▼                              ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                       ALLOY-ALERTS (Deployment)                           │
-│                                                                           │
-│  ┌────────────────────────────┐    ┌──────────────────────────┐         │
-│  │ mimir.rules.kubernetes     │    │ loki.rules.kubernetes    │         │
-│  │                            │    │                          │         │
-│  │ address:                   │    │ address:                 │         │
-│  │   mimir:9009               │    │   loki:3100              │         │
-│  │                            │    │                          │         │
-│  │ rule_selector:             │    │ rule_selector:           │         │
-│  │   tenant = stage           │    │   tenant = stage         │         │
-│  │   type = metrics           │    │   type = logs            │         │
-│  │                            │    │                          │         │
-│  │ tenant_id: "stage"         │    │ tenant_id: "stage"       │         │
-│  └──────────────┬─────────────┘    └──────────────┬───────────┘         │
+│                       ALLOY-ALERTS (Deployment)                          │
+│                                                                          │
+│  ┌────────────────────────────┐     ┌──────────────────────────┐         │
+│  │ mimir.rules.kubernetes     │     │ loki.rules.kubernetes    │         │
+│  │                            │     │                          │         │
+│  │ address:                   │     │ address:                 │         │
+│  │   mimir:9009               │     │   loki:3100              │         │
+│  │                            │     │                          │         │
+│  │ rule_selector:             │     │ rule_selector:           │         │
+│  │   tenant = stage           │     │   tenant = stage         │         │
+│  │   type = metrics           │     │   type = logs            │         │
+│  │                            │     │                          │         │
+│  │ tenant_id: "stage"         │     │ tenant_id: "stage"       │         │
+│  └──────────────┬─────────────┘     └──────────────┬───────────┘         │
 └─────────────────┼──────────────────────────────────┼─────────────────────┘
                   │ Syncs via API                    │ Syncs via API
                   │ (X-Scope-OrgID: stage)           │ (X-Scope-OrgID: stage)
@@ -369,12 +370,13 @@ The alerting system uses a unified approach with PrometheusRule CRDs for both me
 │  │   isolation        │  │          │  │ • Per-tenant       │  │
 │  │                    │  │          │  │   isolation        │  │
 │  └─────────┬──────────┘  │          │  └─────────┬──────────┘  │
-│            │ Fires alerts│          │            │ Fires alerts│
+│            │ Fires       │          │            │ Fires       │
+|            | alerts      |          |            | alerts      |
 │            ▼             │          │            │             │
-│  ┌────────────────────┐  │          │  alertmanager_url:      │
-│  │ Mimir              │◄─┼──────────┼──http://mimir:9009/     │
-│  │ AlertManager       │  │          │  alertmanager           │
-│  │                    │  │          │  (X-Scope-OrgID header) │
+│  ┌────────────────────┐  │          │  alertmanager_url:       │
+│  │ Mimir              │◄─┼──────────┼──http://mimir:9009/      │
+│  │ AlertManager       │  │          │  alertmanager            │
+│  │                    │  │          │  (X-Scope-OrgID header)  │
 │  │ • Multi-tenant     │  │          └──────────────────────────┘
 │  │ • Unified alerts   │  │
 │  │   from Mimir +     │  │
@@ -393,20 +395,20 @@ The alerting system uses a unified approach with PrometheusRule CRDs for both me
              │ Routes based on tenant & severity
              ▼
 ┌─────────────────────────────────────────┐
-│       Notification Channels              │
+│       Notification Channels             │
 │                                         │
-│  ┌──────────┐  ┌──────────┐            │
-│  │ Grafana  │  │  Slack   │            │
-│  │ Alerting │  │ Webhooks │            │
-│  │   UI     │  └──────────┘            │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Grafana  │  │  Slack   │             │
+│  │ Alerting │  │ Webhooks │             │
+│  │   UI     │  └──────────┘             │
 │  │          │                           │
-│  │ • View   │  ┌──────────┐            │
-│  │   alerts │  │PagerDuty │            │
-│  │ • Create │  └──────────┘            │
+│  │ • View   │  ┌──────────┐             │
+│  │   alerts │  │PagerDuty │             │
+│  │ • Create │  └──────────┘             │
 │  │   silence│                           │
-│  │ • Manage │  ┌──────────┐            │
-│  │   routes │  │  Email   │            │
-│  └──────────┘  └──────────┘            │
+│  │ • Manage │  ┌──────────┐             │
+│  │   routes │  │  Email   │             │
+│  └──────────┘  └──────────┘             │
 └─────────────────────────────────────────┘
 ```
 
@@ -437,21 +439,21 @@ Both types:
 
 ```
 ┌──────────────────────────────────────────┐
-│         MinIO StatefulSet                 │
+│         MinIO StatefulSet                │
 │                                          │
-│  ┌────────────────────────────────────┐ │
-│  │ S3-Compatible Object Storage       │ │
-│  │                                    │ │
-│  │ Bucket: loki-ruler                 │ │
-│  │                                    │ │
-│  │ /stage/                            │ │
-│  │   └── rule-groups/                 │ │
-│  │       └── log-alerts-stage.yaml    │ │
-│  │                                    │ │
-│  │ /prod/                             │ │
-│  │   └── rule-groups/                 │ │
-│  │       └── log-alerts-prod.yaml     │ │
-│  └────────────────────────────────────┘ │
+│  ┌────────────────────────────────────┐  │
+│  │ S3-Compatible Object Storage       │  │
+│  │                                    │  │
+│  │ Bucket: loki-ruler                 │  │
+│  │                                    │  │
+│  │ /stage/                            │  │
+│  │   └── rule-groups/                 │  │
+│  │       └── log-alerts-stage.yaml    │  │
+│  │                                    │  │
+│  │ /prod/                             │  │
+│  │   └── rule-groups/                 │  │
+│  │       └── log-alerts-prod.yaml     │  │
+│  └────────────────────────────────────┘  │
 └──────────────────────────────────────────┘
          ▲
          │ S3 API calls
@@ -522,19 +524,19 @@ Tempo (Traces):
 ┌──────────────────────────────────────────┐
 │  Mimir Ruler (stage tenant)              │
 │                                          │
-│  Query: rate(http_requests[5m])         │
+│  Query: rate(http_requests[5m])          │
 │  ↓                                       │
-│  Queries only stage tenant's metrics    │
-│  (X-Scope-OrgID: stage)                 │
+│  Queries only stage tenant's metrics     │
+│  (X-Scope-OrgID: stage)                  │
 └──────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────┐
 │  Loki Ruler (prod tenant)                │
 │                                          │
-│  Query: rate({level="error"}[5m])       │
+│  Query: rate({level="error"}[5m])        │
 │  ↓                                       │
-│  Queries only prod tenant's logs        │
-│  (X-Scope-OrgID: prod)                  │
+│  Queries only prod tenant's logs         │
+│  (X-Scope-OrgID: prod)                   │
 └──────────────────────────────────────────┘
 ```
 
