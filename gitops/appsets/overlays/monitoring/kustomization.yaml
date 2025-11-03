@@ -2,6 +2,7 @@ resources:
   - ../../base/operators/prometheus-operator
   - ../../base/operators/alloy-operator
   - ../../base/monitoring-stack
+  - ../../base/alerts
 
 namespace: argocd
 

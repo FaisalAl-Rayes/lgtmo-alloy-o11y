@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: alerts-set
+  namespace: argocd
+spec:
+  generators:
+    - merge:
+        mergeKeys:
+          - nameNormalized
+        generators:
+          - list:
+              elements:
+                - name: monitoring-cluster
+                  nameNormalized: stage-alerts
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-stack-multi-tenancy-cluster.git
+                  path: o11y/alerting-rules/tenants/stage
+                  namespace: monitoring
+                  environment: monitoring
+                - name: monitoring-cluster
+                  nameNormalized: prod-alerts
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-stack-multi-tenancy-cluster.git
+                  path: o11y/alerting-rules/tenants/prod
+                  namespace: monitoring
+                  environment: monitoring
+          - clusters:
+              selector:
+                matchLabels:
+                  environment: monitoring
+  template:
+    metadata:
+      name: '{{nameNormalized}}-{{environment}}'
+    spec:
+      project: default
+      source:
+        repoURL: '{{repoURL}}'
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        name: '{{name}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
