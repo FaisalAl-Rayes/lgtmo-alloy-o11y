@@ -59,8 +59,8 @@ echo ""
 
 # Alloy-Alerts
 echo "Starting Alloy-Alerts port-forward..."
-kubectl port-forward -n alloy-system service/alloy-alerts 12333:12345 --context monitoring-cluster > /dev/null 2>&1 &
-echo "  ✓ Alloy-Alerts HTTP/Metrics: http://localhost:12333"
+kubectl port-forward -n alloy-system service/alloy-alerts 12336:12345 --context monitoring-cluster > /dev/null 2>&1 &
+echo "  ✓ Alloy-Alerts HTTP/Metrics: http://localhost:12336"
 echo ""
 
 echo "==========================================="
