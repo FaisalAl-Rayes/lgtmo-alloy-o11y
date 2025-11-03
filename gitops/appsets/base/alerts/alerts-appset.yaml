@@ -13,13 +13,13 @@ spec:
               elements:
                 - name: monitoring-cluster
                   nameNormalized: stage-alerts
-                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-stack-multi-tenancy-cluster.git
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
                   path: o11y/alerting-rules/tenants/stage
                   namespace: monitoring
                   environment: monitoring
                 - name: monitoring-cluster
                   nameNormalized: prod-alerts
-                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-stack-multi-tenancy-cluster.git
+                  repoURL: https://github.com/FaisalAl-Rayes/lgtmo-alloy-o11y.git
                   path: o11y/alerting-rules/tenants/prod
                   namespace: monitoring
                   environment: monitoring
